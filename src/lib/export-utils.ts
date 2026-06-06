@@ -44,7 +44,7 @@ export const executeRoomMappingPDF = async (flattenedRows: FlatAdminRow[], showM
                 doc.setFontSize(16); doc.setTextColor(185, 28, 28); doc.setFont("helvetica", "bold");
                 doc.text("PEMETAAN KAMAR PENGINAPAN", 105, startYAfterKop + 8, { align: "center" });
             }
-            doc.setFontSize(8); doc.setTextColor(150); doc.text(`Hal. ${pageData.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+            doc.setFontSize(8); doc.setTextColor(150); doc.text(`Hal. ${pageData.pageNumber} dari ${(doc as any).internal.getNumberOfPages()}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
         }
     });
     doc.save(`Konkerkab-1 Pemetaan Kamar ${getTimestamp()}.pdf`);
@@ -90,7 +90,7 @@ export const executeTshirtReceiptPDF = async (flattenedRows: FlatAdminRow[], sho
             if (d.pageNumber === 1) {
                 doc.setFontSize(16); doc.setTextColor(185, 28, 28); doc.setFont("helvetica", "bold"); doc.text("TANDA TERIMA KAOS", 105, startYAfterKop + 8, { align: "center" });
             }
-            doc.setFontSize(8); doc.setTextColor(150); doc.text(`Hal. ${d.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+            doc.setFontSize(8); doc.setTextColor(150); doc.text(`Hal. ${d.pageNumber} dari ${(doc as any).internal.getNumberOfPages()}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
         }
     });
     doc.save(`Konkerkab-1 Tanda Terima Kaos ${getTimestamp()}.pdf`);
@@ -113,7 +113,7 @@ export const executeMasterKomisiPDF = async (flattenedRows: FlatAdminRow[], show
             if (d.pageNumber === 1) {
                 doc.setFontSize(16); doc.setTextColor(185, 28, 28); doc.setFont("helvetica", "bold"); doc.text("PEMBAGIAN KOMISI", 105, startYAfterKop + 8, { align: "center" });
             }
-            doc.setFontSize(8); doc.setTextColor(150); doc.text(`Hal. ${d.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+            doc.setFontSize(8); doc.setTextColor(150); doc.text(`Hal. ${d.pageNumber} dari ${(doc as any).internal.getNumberOfPages()}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
         }
     });
     doc.save(`Konkerkab-1 Master Komisi ${getTimestamp()}.pdf`);
@@ -132,7 +132,7 @@ export const executeSidangKomisiPDF = async (flattenedRows: FlatAdminRow[], show
         if (idx > 0) doc.addPage();
         
         const startYAfterKop = await drawKopSurat(doc);
-        const startPageAt = doc.internal.getNumberOfPages();
+        const startPageAt = (doc as any).internal.getNumberOfPages();
         const filtered = data.filter(r => r.kom === kom).sort((a, b) => a.name.localeCompare(b.name));
         const rows = filtered.map((r, i) => [i + 1, r.name, r.branch]);
         
@@ -145,7 +145,7 @@ export const executeSidangKomisiPDF = async (flattenedRows: FlatAdminRow[], show
                 doc.text(`PESERTA SIDANG ${kom}`, 105, startYAfterKop + 8, { align: "center" });
             }
         });
-        pageRanges.push({ name: kom, start: startPageAt, end: doc.internal.getNumberOfPages() });
+        pageRanges.push({ name: kom, start: startPageAt, end: (doc as any).internal.getNumberOfPages() });
     }
 
     pageRanges.forEach(range => {
@@ -174,7 +174,7 @@ export const executeAttendancePDF = async (flattenedRows: FlatAdminRow[], showMo
         if (idx > 0) doc.addPage();
         
         const startYAfterKop = await drawKopSurat(doc);
-        const startPageAt = doc.internal.getNumberOfPages();
+        const startPageAt = (doc as any).internal.getNumberOfPages();
         const filtered = data.filter(r => r.kom === kom).sort((a, b) => a.name.localeCompare(b.name));
         const rows: any[] = filtered.map((r, i) => [i + 1, r.name, r.branch, ""]);
         for(let i=0; i<5; i++) rows.push([filtered.length + i + 1, "", "", ""]);
@@ -196,7 +196,7 @@ export const executeAttendancePDF = async (flattenedRows: FlatAdminRow[], showMo
                 doc.text(`DAFTAR HADIR SIDANG ${kom}`, 105, startYAfterKop + 8, { align: "center" });
             }
         });
-        pageRanges.push({ name: kom, start: startPageAt, end: doc.internal.getNumberOfPages() });
+        pageRanges.push({ name: kom, start: startPageAt, end: (doc as any).internal.getNumberOfPages() });
     }
 
     pageRanges.forEach(range => {

@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { KOP_SURAT_URL, TEMPLATE_URLS } from './constants';
-import { SubmissionData } from '../types';
+import { SubmissionData, FlatAdminRow } from '../types';
 
 export const toProperCase = (str: string) => {
     if (!str) return "";
@@ -150,4 +150,40 @@ export const downloadFullPDF = async (id: string, data: SubmissionData) => {
     const namaProper = toProperCase(data.p1_nama || "");
     let filename = isPeserta ? `Konkerkab-1 Bukti Pendaftaran ${entitasProper} ${ts}.pdf` : `Konkerkab-1 Bukti Pendaftaran ${entitasProper} ${namaProper} ${ts}.pdf`;
     doc.save(filename);
+};
+
+export const printAllCardsA4 = async (list: FlatAdminRow[], showModal: Function, setProgress: (progress: number) => void) => {
+    if (list.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    showModal("MEMPROSES", "Sedang menyusun kartu...", "success", true);
+    
+    const cw = 54, ch = 86, gapX = 10, gapY = 10;
+    const stX = (210 - (cw * 3 + gapX * 2)) / 2;
+    const stY = (297 - (ch * 3 + gapY * 2)) / 2;
+    
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i]; 
+        const isPeserta = item.kategori.includes("PESERTA");
+        const img = await drawSingleCard(
+            item.name, 
+            isPeserta ? item.branch : item.jabatan, 
+            item.foto, 
+            (item.sD as any).kategori
+        );
+        
+        const pIdx = i % 9; 
+        if (i > 0 && pIdx === 0) doc.addPage();
+        
+        const x = stX + (pIdx % 3) * (cw + gapX);
+        const y = stY + Math.floor(pIdx / 3) * (ch + gapY);
+        
+        doc.addImage(img, 'JPEG', x, y, cw, ch); 
+        
+        setProgress(((i + 1) / list.length) * 100);
+    }
+    
+    const filename = `Konkerkab-1 ID Card Massal ${getTimestamp()}.pdf`;
+    doc.save(filename); 
+    showModal("BERHASIL", "PDF telah diunduh.", "success"); 
 };
