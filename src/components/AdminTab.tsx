@@ -360,20 +360,62 @@ export function AdminTab({ submissions, isRegistrationOpen, showModal, onViewPre
             {showExportModal && (
                 <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
                     <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative text-slate-800 border border-white/20">
-                        <button onClick={() => setShowExportModal(false)} className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all">✕</button>
+                        <button onClick={() => setShowExportModal(false)} className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all">
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                         <div className="text-center mb-6">
                             <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">Ekspor Data</h2>
                             <p className="text-slate-400 text-[8px] font-bold uppercase mt-1 tracking-widest">Pilih format unduhan</p>
                         </div>
                         <div className="grid grid-cols-4 gap-3 w-full">
-                            <div onClick={() => { setShowExportModal(false); executeExcelExport(flattenedRows, showModal); }} className="export-option-card">EXCEL</div>
-                            <div onClick={() => { setShowExportModal(false); executeRoomMappingPDF(flattenedRows, showModal); }} className="export-option-card">KMR</div>
-                            <div onClick={() => { setShowExportModal(false); executeTshirtRecapPDF(flattenedRows, showModal); }} className="export-option-card">KAOS</div>
-                            <div onClick={() => { setShowExportModal(false); executeTshirtReceiptPDF(flattenedRows, showModal); }} className="export-option-card">T. KAOS</div>
-                            <div onClick={() => { setShowExportModal(false); executeMasterKomisiPDF(flattenedRows, showModal); }} className="export-option-card">KOMISI</div>
-                            <div onClick={() => { setShowExportModal(false); executeSidangKomisiPDF(flattenedRows, showModal); }} className="export-option-card">SIDANG</div>
-                            <div onClick={() => { setShowExportModal(false); executeAttendancePDF(flattenedRows, showModal); }} className="export-option-card">HADIR S</div>
-                            <div onClick={() => { setShowExportModal(false); executePlenoAttendancePDF(flattenedRows, showModal); }} className="export-option-card">HADIR P</div>
+                            <div onClick={() => { setShowExportModal(false); executeExcelExport(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                </div>
+                                <span className="tooltip-text">Database Excel</span>
+                            </div>
+                            <div onClick={() => { setShowExportModal(false); executeRoomMappingPDF(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                </div>
+                                <span className="tooltip-text">Pemetaan Kamar</span>
+                            </div>
+                            <div onClick={() => { setShowExportModal(false); executeTshirtRecapPDF(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                </div>
+                                <span className="tooltip-text">Rekap Ukuran Kaos</span>
+                            </div>
+                            <div onClick={() => { setShowExportModal(false); executeTshirtReceiptPDF(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-slate-50 text-slate-900 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                </div>
+                                <span className="tooltip-text">Tanda Terima Kaos</span>
+                            </div>
+                            <div onClick={() => { setShowExportModal(false); executeMasterKomisiPDF(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M6 16h.01" /></svg>
+                                </div>
+                                <span className="tooltip-text">Master Komisi</span>
+                            </div>
+                            <div onClick={() => { setShowExportModal(false); executeSidangKomisiPDF(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                </div>
+                                <span className="tooltip-text">Peserta Sidang</span>
+                            </div>
+                            <div onClick={() => { setShowExportModal(false); executeAttendancePDF(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-cyan-50 text-cyan-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </div>
+                                <span className="tooltip-text">Daftar Hadir Komisi</span>
+                            </div>
+                            <div onClick={() => { setShowExportModal(false); executePlenoAttendancePDF(flattenedRows, showModal); }} className="export-option-card group tooltip-container">
+                                <div className="w-10 h-10 bg-slate-100 text-slate-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                                </div>
+                                <span className="tooltip-text">Daftar Hadir Pleno</span>
+                            </div>
                         </div>
                     </div>
                 </div>
