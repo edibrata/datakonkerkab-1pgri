@@ -27,10 +27,15 @@ export const drawKopSurat = async (doc: jsPDF): Promise<number> => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      const canvasWidth = 190;
-      const imgHeight = (img.height * canvasWidth) / img.width;
-      doc.addImage(img, "JPEG", 10, 5, canvasWidth, imgHeight);
-      resolve(imgHeight + 5);
+      try {
+        const canvasWidth = 190;
+        const imgHeight = (img.height * canvasWidth) / img.width;
+        doc.addImage(img, "PNG", 10, 5, canvasWidth, imgHeight);
+        resolve(imgHeight + 5);
+      } catch (err) {
+        console.error("Error in drawKopSurat:", err);
+        resolve(20);
+      }
     };
     img.onerror = () => resolve(20);
     img.src = KOP_SURAT_URL;
@@ -59,65 +64,73 @@ export const drawSingleCard = async (
       cvs.height = 1980;
       ctx.clearRect(0, 0, cvs.width, cvs.height);
       const drawContent = (pImg: HTMLImageElement | null) => {
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(0, 0, 1240, 1980);
-        if (pImg) {
-          const fX = 410,
-            fY = 960,
-            fW = 420,
-            fH = 560;
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(fX, fY, fW, fH);
-          ctx.clip();
-          const imgAsp = pImg.width / pImg.height,
-            targetAsp = fW / fH;
-          let sW, sH, sX, sY;
-          if (imgAsp > targetAsp) {
-            sH = pImg.height;
-            sW = pImg.height * targetAsp;
-            sX = (pImg.width - sW) / 2;
-            sY = 0;
-          } else {
-            sW = pImg.width;
-            sH = pImg.width / targetAsp;
-            sX = 0;
-            sY = (pImg.height - sH) / 2;
+        try {
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, 1240, 1980);
+          if (pImg) {
+            const fX = 410,
+              fY = 960,
+              fW = 420,
+              fH = 560;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(fX, fY, fW, fH);
+            ctx.clip();
+            const imgAsp = pImg.width / pImg.height,
+              targetAsp = fW / fH;
+            let sW, sH, sX, sY;
+            if (imgAsp > targetAsp) {
+              sH = pImg.height;
+              sW = pImg.height * targetAsp;
+              sX = (pImg.width - sW) / 2;
+              sY = 0;
+            } else {
+              sW = pImg.width;
+              sH = pImg.width / targetAsp;
+              sX = 0;
+              sY = (pImg.height - sH) / 2;
+            }
+            ctx.drawImage(pImg, sX, sY, sW, sH, fX, fY, fW, fH);
+            ctx.restore();
           }
-          ctx.drawImage(pImg, sX, sY, sW, sH, fX, fY, fW, fH);
-          ctx.restore();
-        }
-        ctx.drawImage(tpl, 0, 0, 1240, 1980);
-        const nm = (name || "").toUpperCase();
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#111111";
-        ctx.textBaseline = "middle";
-        const maxNW = 920,
-          maxNH = 120;
-        let nSize = 80;
-        ctx.font = `bold ${nSize}px "Times New Roman", Times, serif`;
-        while (
-          (ctx.measureText(nm).width > maxNW || nSize > maxNH) &&
-          nSize > 10
-        ) {
-          nSize--;
+          ctx.drawImage(tpl, 0, 0, 1240, 1980);
+          const nm = (name || "").toUpperCase();
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#111111";
+          ctx.textBaseline = "middle";
+          const maxNW = 920,
+            maxNH = 120;
+          let nSize = 80;
           ctx.font = `bold ${nSize}px "Times New Roman", Times, serif`;
-        }
-        ctx.fillText(nm, 620, 1598);
-        const displayInfo = (info || "").toUpperCase();
-        const maxIW = 920,
-          maxIH = 150;
-        let iSize = 75;
-        ctx.font = `bold ${iSize}px "Times New Roman", Times, serif`;
-        while (
-          (ctx.measureText(displayInfo).width > maxIW || iSize > maxIH) &&
-          iSize > 10
-        ) {
-          iSize--;
+          while (
+            (ctx.measureText(nm).width > maxNW || nSize > maxNH) &&
+            nSize > 10
+          ) {
+            nSize--;
+            ctx.font = `bold ${nSize}px "Times New Roman", Times, serif`;
+          }
+          ctx.fillText(nm, 620, 1598);
+          const displayInfo = (info || "").toUpperCase();
+          const maxIW = 920,
+            maxIH = 150;
+          let iSize = 75;
           ctx.font = `bold ${iSize}px "Times New Roman", Times, serif`;
+          while (
+            (ctx.measureText(displayInfo).width > maxIW || iSize > maxIH) &&
+            iSize > 10
+          ) {
+            iSize--;
+            ctx.font = `bold ${iSize}px "Times New Roman", Times, serif`;
+          }
+          ctx.fillText(displayInfo, 620, 1830);
+          resolve(cvs.toDataURL("image/jpeg", 1.0));
+        } catch (err) {
+          console.error("Error in drawContent:", err);
+          const cvsFallback = document.createElement("canvas");
+          cvsFallback.width = 1240;
+          cvsFallback.height = 1980;
+          resolve(cvsFallback.toDataURL("image/jpeg", 1.0));
         }
-        ctx.fillText(displayInfo, 620, 1830);
-        resolve(cvs.toDataURL("image/jpeg", 1.0));
       };
       if (photoData) {
         const img = new Image();

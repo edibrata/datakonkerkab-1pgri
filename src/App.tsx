@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFirebaseData } from "./hooks/useFirebaseData";
 import { Navigation } from "./components/Navigation";
 import { HomeTab } from "./components/HomeTab";
@@ -22,6 +22,19 @@ export default function App() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setModalConfig(null);
+        setShowCategoryModal(false);
+        setShowInstructionModal(false);
+        setPreviewImage(null);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   const showModal = (
     title: string,

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SubmissionData, FlatAdminRow } from "../types";
 import { db } from "../lib/firebase";
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
@@ -61,6 +61,17 @@ export function AdminTab({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showExportModal, setShowExportModal] = useState(false);
   const [activeRowActions, setActiveRowActions] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowExportModal(false);
+        setActiveRowActions(null);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   const checkAdmin = () => {
     if (password === "adminpgri") {

@@ -48,6 +48,24 @@ export function FormTab({
     }
   }, [initialCategory]);
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowKomisiModal(false);
+        setShowTokenModal((prev) => {
+          if (prev) {
+            setInputToken("");
+            setFormData((f) => ({ kategori: f.kategori }));
+            return false;
+          }
+          return prev;
+        });
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
   if (!isRegistrationOpen) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4 text-center">
@@ -250,6 +268,54 @@ export function FormTab({
         "success",
       );
       onSaveSuccess();
+    } catch (e: any) {
+      showModal("ERROR", e.message, "error");
+    }
+  };
+
+  const saveAndAddNext = async () => {
+    const finalData = { ...formData };
+    finalData.waktu_simpan = new Date().toLocaleString("id-ID");
+
+    for (let i = 2; i <= 4; i++) {
+      delete (finalData as any)[`p${i}_nama`];
+      delete (finalData as any)[`p${i}_jabatan`];
+      delete (finalData as any)[`p${i}_jk`];
+      delete (finalData as any)[`p${i}_wa`];
+      delete (finalData as any)[`p${i}_kaos`];
+      delete (finalData as any)[`p${i}_foto`];
+      delete (finalData as any)[`p${i}_komisi`];
+    }
+    if (finalData.kategori === "PANITIA") finalData.nama_cabang = "PANITIA";
+    else if (finalData.kategori === "PENINJAU")
+      finalData.nama_cabang = "PENINJAU - " + (finalData.p1_jabatan || "");
+
+    const requiredFields = ["nama", "jabatan", "jk", "wa", "kaos"];
+    for (const field of requiredFields) {
+      if (!(finalData as any)[`p1_${field}`]) {
+        return showModal("ERROR", "Lengkapi semua field.", "error");
+      }
+    }
+    if (finalData.kategori !== "PENINJAU" && !(finalData as any)[`p1_foto`]) {
+      return showModal("FOTO WAJIB", "Silakan unggah foto.", "error");
+    }
+
+    showModal("MEMPROSES", "Sedang menyimpan personil...", "success");
+    try {
+      finalData.revision_token = Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase();
+      const ref = await addDoc(
+        collection(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar"),
+        finalData as any,
+      );
+
+      await downloadFullPDF(ref.id, finalData);
+
+      setFormData({ kategori: finalData.kategori });
+      setCurrentStep(2);
+      showModal("BERHASIL", "Data tersimpan & ID Card diunduh.", "success");
     } catch (e: any) {
       showModal("ERROR", e.message, "error");
     }
@@ -612,6 +678,12 @@ export function FormTab({
                 <li className="flex items-start gap-1.5">
                   <span className="font-bold">2.</span>{" "}
                   <span>
+                    Klik kanan pada file, lalu pilih <span className="font-bold">Bagikan (Share)</span>.
+                  </span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold">3.</span>{" "}
+                  <span>
                     Ubah akses umum menjadi{" "}
                     <span className="font-bold bg-amber-100 px-1 rounded text-amber-900 border border-amber-200">
                       "Siapa saja yang memiliki link"
@@ -620,8 +692,8 @@ export function FormTab({
                   </span>
                 </li>
                 <li className="flex items-start gap-1.5">
-                  <span className="font-bold">3.</span>{" "}
-                  <span>Salin tautan (Copy link) dan tempel di bawah.</span>
+                  <span className="font-bold">4.</span>{" "}
+                  <span>Salin tautan (Copy link) dan tempel di bawah ini.</span>
                 </li>
               </ul>
             </div>
@@ -785,6 +857,15 @@ export function FormTab({
               )}
             </div>
             <div className="flex gap-1 md:gap-2">
+              {!isPeserta && currentStep === 2 && (
+                <button
+                  type="button"
+                  onClick={saveAndAddNext}
+                  className="px-3 md:px-6 py-3 border border-red-600 text-red-600 font-bold rounded text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Tambah
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => moveStep(1)}
