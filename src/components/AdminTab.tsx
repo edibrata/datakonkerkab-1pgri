@@ -298,7 +298,7 @@ export function AdminTab({ submissions, isRegistrationOpen, showModal, onViewPre
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-[11px] font-medium text-slate-700">
                         {flattenedRows.map((r, idx) => {
-                            const rowVal = `${r.id}|${r.i}|${r.kategori}`;
+                            const rowVal = `${r.id}|${r.i}|${r.kategori}|${idx}`;
                             const isActionActiveN = activeRowActions === `n_${r.id}_${r.i}`;
                             const isActionActiveT = activeRowActions === `t_${r.id}_${r.i}`;
                             const waMsg = encodeURIComponent(`Yth. \n${r.jk === 'LAKI-LAKI' ? 'Bapak' : 'Ibu'} *${toProperCase(r.name)}*,\n\nKami sampaikan bahwa ...\n\nDemikian, harap maklum.\n\n------------\nAdmin Konkerkab-1\n------------`);
