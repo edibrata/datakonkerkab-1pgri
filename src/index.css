@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Montserrat:wght@600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+.gradient-bg { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.fade-in { animation: fadeIn 0.2s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+th.sortable { cursor: pointer; }
+th.sortable:hover { background-color: #f8fafc; color: #ef4444; }
+
+.tooltip-container { position: relative; }
+.tooltip-text {
+    visibility: hidden;
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1e293b;
+    color: white;
+    text-align: center;
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    width: max-content;
+    z-index: 100;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    line-height: 1.4;
+}
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+}
+
+.action-active .action-panel { display: flex !important; }
+
+.category-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.category-card:hover { transform: translateY(-3px); border-color: #ef4444; background-color: #fffafb; }
+
+.export-option-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply border border-slate-100 p-4 rounded-2xl flex flex-col items-center justify-center cursor-pointer bg-white shadow-sm h-full text-center w-full;
+}
+.export-option-card:hover {
+    @apply border-red-500 bg-red-50 -translate-y-1.5 shadow-xl;
+}
