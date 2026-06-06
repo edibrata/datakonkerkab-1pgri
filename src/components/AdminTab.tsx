@@ -4,15 +4,7 @@ import { db } from "../lib/firebase";
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { CUSTOM_APP_ID } from "../lib/constants";
 import { toProperCase, formatWA } from "../lib/pdf-utils";
-import {
-  Eye,
-  EyeOff,
-  Download,
-  Printer,
-  LogOut,
-  Search,
-  Trash2,
-} from "lucide-react";
+
 import {
   executeExcelExport,
   executeRoomMappingPDF,
@@ -373,9 +365,55 @@ export function AdminTab({
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               {showPass ? (
-                <EyeOff className="h-5 w-5" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.52 13.16 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <line
+                    x1="2"
+                    x2="22"
+                    y1="2"
+                    y2="22"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               ) : (
-                <Eye className="h-5 w-5" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 010-.644C3.399 8.049 7.39 5 12 5s8.601 3.049 9.964 6.678c.07.186.07.388 0 .574-1.364 3.629-5.355 6.678-9.964 6.678s-8.601-3.049-9.964-6.678z"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               )}
             </button>
           </div>
@@ -416,7 +454,6 @@ export function AdminTab({
             Database
           </h2>
           <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded px-2 py-1">
-            <Search className="w-4 h-4 text-slate-400" />
             <input
               type="text"
               value={search}
@@ -446,7 +483,15 @@ export function AdminTab({
                 onClick={handleBulkDelete}
                 className="h-9 px-3 flex items-center gap-2 rounded-lg bg-white border border-rose-100 text-rose-600 hover:bg-rose-50 transition-all shadow-sm tooltip-container"
               >
-                <Trash2 className="h-4 w-4" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
                 <span className="text-[10px] font-bold uppercase tracking-wider">
                   Hapus
                 </span>
@@ -464,7 +509,19 @@ export function AdminTab({
               }
               className="h-9 w-9 flex items-center justify-center rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 transition-all shadow-sm tooltip-container"
             >
-              <Printer className="h-4 w-4" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
               <span className="tooltip-text" style={{ width: "auto" }}>
                 Cetak Massal
               </span>
@@ -473,7 +530,19 @@ export function AdminTab({
               onClick={() => setShowExportModal(true)}
               className="h-9 w-9 flex items-center justify-center rounded-lg bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm tooltip-container"
             >
-              <Download className="h-4 w-4" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
               <span className="tooltip-text" style={{ width: "auto" }}>
                 Ekspor Data
               </span>
@@ -494,9 +563,21 @@ export function AdminTab({
             onClick={logout}
             className="h-9 w-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-900 transition-all shadow-sm tooltip-container"
           >
-            <LogOut className="h-4 w-4" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
             <span className="tooltip-text" style={{ width: "auto" }}>
-              Keluar
+              Keluar Admin
             </span>
           </button>
         </div>
@@ -515,78 +596,114 @@ export function AdminTab({
                 />
               </th>
               <th
-                className="px-4 py-4 w-12 sortable"
+                className="px-4 py-4 w-12 sortable tooltip-container"
                 onClick={() => handleSort("idx")}
               >
                 No
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("ts")}
               >
                 Waktu Daftar
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("kategori")}
               >
                 Kategori
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("branch")}
               >
                 Entitas
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th className="px-4 py-4">Foto</th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("name")}
               >
                 Nama Peserta
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("jabatan")}
               >
                 Jabatan
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("jk")}
               >
                 JK
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("kom")}
               >
                 Komisi
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("wa")}
               >
                 WhatsApp
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("kaos")}
               >
                 Kaos
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th
-                className="px-4 py-4 sortable"
+                className="px-4 py-4 sortable tooltip-container"
                 onClick={() => handleSort("room")}
               >
                 Kamar
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
               <th className="px-4 py-4">Surat Mandat</th>
               <th
-                className="px-4 py-4 w-40 sortable"
+                className="px-4 py-4 w-40 sortable tooltip-container"
                 onClick={() => handleSort("token")}
               >
                 Token
+                <span className="tooltip-text" style={{ width: "auto" }}>
+                  Urutkan
+                </span>
               </th>
             </tr>
           </thead>
