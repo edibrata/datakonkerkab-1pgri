@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { KOP_SURAT_URL, TEMPLATE_URLS } from "./constants";
 import { SubmissionData, FlatAdminRow } from "../types";
 
@@ -122,8 +122,16 @@ export const drawSingleCard = async (
       if (photoData) {
         const img = new Image();
         img.onload = () => drawContent(img);
+        img.onerror = () => drawContent(null);
         img.src = photoData;
       } else drawContent(null);
+    };
+    tpl.onerror = () => {
+      console.error("Failed to load template image", templateUrl);
+      const cvsFallback = document.createElement("canvas");
+      cvsFallback.width = 1240;
+      cvsFallback.height = 1980;
+      resolve(cvsFallback.toDataURL("image/jpeg", 1.0));
     };
     tpl.src = templateUrl;
   });
@@ -176,7 +184,7 @@ export const downloadFullPDF = async (id: string, data: SubmissionData) => {
     }
   }
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: y - 1,
     head: [["No", "Nama Lengkap", "Jabatan", "Komisi", "WhatsApp"]],
     body: rows,

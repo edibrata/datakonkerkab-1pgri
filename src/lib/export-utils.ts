@@ -1,7 +1,7 @@
 import { FlatAdminRow } from "../types";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { drawKopSurat, getTimestamp } from "./pdf-utils";
 
 export const executeExcelExport = (
@@ -66,7 +66,7 @@ export const executeRoomMappingPDF = async (
 
   const startYAfterKop = await drawKopSurat(doc);
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: startYAfterKop + 15,
     head: [["No", "Entitas", "Nama Lengkap", "JK", "WhatsApp", "Kamar"]],
     body: rows,
@@ -156,7 +156,7 @@ export const executeTshirtRecapPDF = async (
     totalP,
     totalL + totalP,
   ]);
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: startYAfterKop + 13,
     head: [["Ukuran", "Laki-laki", "Perempuan", "Total"]],
     body: summaryRows,
@@ -193,7 +193,7 @@ export const executeTshirtReceiptPDF = async (
 
   const startYAfterKop = await drawKopSurat(doc);
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: startYAfterKop + 13,
     head: [
       [
@@ -252,7 +252,7 @@ export const executeMasterKomisiPDF = async (
 
   const startYAfterKop = await drawKopSurat(doc);
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: startYAfterKop + 13,
     head: [["No", "Entitas", "Nama Lengkap", "Komisi"]],
     body: rows,
@@ -309,7 +309,7 @@ export const executeSidangKomisiPDF = async (
       .sort((a, b) => a.name.localeCompare(b.name));
     const rows = filtered.map((r, i) => [i + 1, r.name, r.branch]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: startYAfterKop + 13,
       head: [["No", "Nama Lengkap", "Entitas"]],
       body: rows,
@@ -379,7 +379,7 @@ export const executeAttendancePDF = async (
     for (let i = 0; i < 5; i++)
       rows.push([filtered.length + i + 1, "", "", ""]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: startYAfterKop + 13,
       head: [["No", "Nama Lengkap", "Entitas", "Tanda Tangan"]],
       body: rows,
@@ -470,7 +470,7 @@ export const executePlenoAttendancePDF = async (
 
   const startYAfterKop = await drawKopSurat(doc);
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: startYAfterKop + 22,
     head: [["No", "Entitas", "Nama", "Jabatan", "Tanda Tangan"]],
     body: rows,

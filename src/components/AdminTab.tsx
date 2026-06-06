@@ -769,7 +769,10 @@ export function AdminTab({
                     {isActionActiveN && (
                       <div className="absolute inset-0 bg-white/95 z-40 flex flex-row items-center justify-center gap-2 border-x border-slate-100 transition-all">
                         <button
-                          onClick={() => handlePreview(r)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePreview(r);
+                          }}
                           className="p-2 bg-slate-50 text-slate-600 rounded-full border border-slate-200 transition-all hover:scale-110 tooltip-container cursor-pointer"
                         >
                           <svg
@@ -800,7 +803,16 @@ export function AdminTab({
                           </span>
                         </button>
                         <button
-                          onClick={() => downloadFullPDF(r.id, r.sD)}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              showModal("MEMPROSES", "Mengunduh PDF Bukti...", "success", true);
+                              await downloadFullPDF(r.id, r.sD as any);
+                              showModal("BERHASIL", "Berhasil diunduh", "success");
+                            } catch(err: any) {
+                              showModal("ERROR", err?.message || "Gagal mengunduh", "error");
+                            }
+                          }}
                           className="p-2 bg-red-50 text-red-600 rounded-full border border-red-100 transition-all hover:scale-110 tooltip-container cursor-pointer"
                         >
                           <svg
@@ -820,7 +832,16 @@ export function AdminTab({
                           </span>
                         </button>
                         <button
-                          onClick={() => downloadCardImg(r)}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              showModal("MEMPROSES", "Mengunduh Gambar...", "success", true);
+                              await downloadCardImg(r);
+                              showModal("BERHASIL", "Selesai.", "success");
+                            } catch(err: any) {
+                              showModal("ERROR", err?.message || "Gagal mengunduh", "error");
+                            }
+                          }}
                           className="p-2 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 transition-all hover:scale-110 tooltip-container cursor-pointer"
                         >
                           <svg
@@ -840,7 +861,10 @@ export function AdminTab({
                           </span>
                         </button>
                         <button
-                          onClick={() => onEditEntry(r.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditEntry(r.id);
+                          }}
                           className="p-2 bg-blue-50 text-blue-600 rounded-full border border-blue-100 transition-all hover:scale-110 tooltip-container cursor-pointer"
                         >
                           <svg
@@ -964,7 +988,10 @@ export function AdminTab({
                     {isActionActiveT && (
                       <div className="absolute inset-0 bg-white/95 z-40 flex flex-row items-center justify-center gap-2 border-x border-slate-100 transition-all">
                         <button
-                          onClick={() => copyToken(r.token)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToken(r.token);
+                          }}
                           className="p-2 bg-blue-50 text-blue-600 rounded-full border border-blue-100 transition-all hover:scale-110 tooltip-container cursor-pointer"
                         >
                           <svg
@@ -984,7 +1011,10 @@ export function AdminTab({
                           </span>
                         </button>
                         <button
-                          onClick={() => resetToken(r.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            resetToken(r.id);
+                          }}
                           className="p-2 bg-amber-50 text-amber-600 rounded-full border border-amber-100 transition-all hover:scale-110 tooltip-container cursor-pointer"
                         >
                           <svg
@@ -1004,7 +1034,8 @@ export function AdminTab({
                           </span>
                         </button>
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const prefix =
                               r.jk === "LAKI-LAKI" ? "Bapak" : "Ibu";
                             const message = `Yth. \n${prefix} *${toProperCase(r.name)}*,\n\nBerikut kode token revisi pendaftaran PGRI *${toProperCase((r.branch || "").replace("PENINJAU - ", ""))}*:\n*${r.token}*\n\n------------\nAdmin Konkerkab-1\n------------`;
