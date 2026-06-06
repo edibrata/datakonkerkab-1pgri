@@ -30,6 +30,7 @@ export function FormTab({
 }: Props) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isRevisionMode, setIsRevisionMode] = useState(false);
+  const [showKomisiModal, setShowKomisiModal] = useState(false);
   const [editingDocId, setEditingDocId] = useState<string | null>(null);
   const [formData, setFormData] = useState<SubmissionData>({
     kategori: initialCategory || "",
@@ -473,22 +474,58 @@ export function FormTab({
             </div>
             {isPeserta && (
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">
-                  Pilih Komisi
-                </label>
-                <select
-                  name={`${pre}komisi`}
-                  value={val("komisi")}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border rounded font-bold uppercase outline-none focus:ring-1 focus:ring-red-400 bg-white"
-                >
-                  <option value="">-- PILIH --</option>
-                  <option value="KOMISI A">KOMISI A</option>
-                  <option value="KOMISI B">KOMISI B</option>
-                  <option value="KOMISI C">KOMISI C</option>
-                  <option value="KOMISI D">KOMISI D</option>
-                </select>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-[10px] font-bold uppercase text-slate-400 mb-0">
+                    Pilih Komisi
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowKomisiModal(true)}
+                    className="text-[9px] font-black text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer px-2.5 py-1 rounded shadow-sm flex items-center gap-1"
+                  >
+                    <svg
+                      className="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Detail Komisi
+                  </button>
+                </div>
+                <div className="relative w-full" id={`${pre}komisi_container`}>
+                  <select
+                    name={`${pre}komisi`}
+                    value={val("komisi")}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border rounded font-bold uppercase outline-none focus:ring-1 focus:ring-red-400 bg-white"
+                  >
+                    <option value="">-- PILIH --</option>
+                    <option value="KOMISI A">KOMISI A</option>
+                    <option value="KOMISI B">KOMISI B</option>
+                    <option value="KOMISI C">KOMISI C</option>
+                    <option value="KOMISI D">KOMISI D</option>
+                  </select>
+                </div>
+                {val("komisi") && (
+                  <p className="text-[9.5px] font-bold text-blue-600 mt-1.5 leading-snug">
+                    {val("komisi") === "KOMISI A" &&
+                      "Fokus: Kesekretariatan, Organisasi, dan Sistem Informasi."}
+                    {val("komisi") === "KOMISI B" &&
+                      "Fokus: Advokasi, Kesejahteraan, dan Kemitraan Strategis serta Pernyataan Sikap Konferensi."}
+                    {val("komisi") === "KOMISI C" &&
+                      "Fokus: Keuangan, Akademik, dan Pengembangan Usaha."}
+                    {val("komisi") === "KOMISI D" &&
+                      "Fokus: Kelembagaan Pendidikan, Sosial Budaya, dan Karakter."}
+                  </p>
+                )}
               </div>
             )}
             <div>
@@ -609,113 +646,205 @@ export function FormTab({
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-center gap-2 mb-8">
-        {Array.from({ length: totalSteps }).map((_, i) => {
-          const stepNum = i + 1;
-          const isActive = stepNum === currentStep;
-          const isCompleted = stepNum < currentStep;
-          return (
-            <div key={stepNum} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${isActive ? "gradient-bg text-white scale-110 shadow-lg" : isCompleted ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"}`}
+    <div className="relative text-slate-800">
+      {showKomisiModal && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6 md:p-8 shadow-2xl relative text-slate-800 border border-slate-100">
+            <button
+              onClick={() => setShowKomisiModal(false)}
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
               >
-                {isCompleted ? "✓" : stepNum}
-              </div>
-              {stepNum < totalSteps && (
-                <div
-                  className={`w-4 md:w-8 h-0.5 ${isCompleted ? "bg-emerald-500" : "bg-slate-100"}`}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
                 />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden p-5 md:p-8">
-        {renderStepContent()}
-
-        <div className="flex justify-between mt-10 pt-6 border-t border-slate-100 gap-2">
-          <div className="flex gap-1 md:gap-2">
-            {currentStep > 1 && (
-              <button
-                type="button"
-                onClick={() => moveStep(-1)}
-                className="px-3 md:px-6 py-3 rounded border font-bold text-slate-400 text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-              >
-                Kembali
-              </button>
-            )}
-            {isRevisionMode && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-3 md:px-6 py-3 border border-red-100 text-red-400 font-bold rounded text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-              >
-                Batal
-              </button>
-            )}
-          </div>
-          <div className="flex gap-1 md:gap-2">
-            <button
-              type="button"
-              onClick={() => moveStep(1)}
-              className="px-5 md:px-8 py-3 gradient-bg text-white font-bold rounded shadow-md text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-            >
-              {currentStep === totalSteps ? "Simpan & Cetak" : "Lanjut"}
+              </svg>
             </button>
-          </div>
-        </div>
-      </div>
-
-      {showTokenModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-xl p-6 text-center shadow-2xl">
-            <h3 className="text-lg font-black uppercase mb-2 text-slate-900">
-              Akses Verifikasi
-            </h3>
-            <p className="text-[10px] text-slate-500 font-bold mb-6 uppercase tracking-wider leading-relaxed">
-              Masukkan 6 digit Kode Token Revisi untuk melanjutkan pengeditan
-              data.
-            </p>
-            <input
-              type="text"
-              value={inputToken}
-              onChange={(e) => setInputToken(e.target.value)}
-              className="w-full px-4 py-3 border text-center font-black tracking-widest text-xl uppercase mb-4 rounded-lg focus:ring-2 focus:ring-red-600 outline-none"
-              placeholder="------"
-            />
-            <button
-              onClick={verifyToken}
-              className="w-full py-3 bg-red-600 text-white rounded font-bold text-xs uppercase shadow-md active:scale-95 transition-all cursor-pointer"
-            >
-              Buka Data
-            </button>
-            <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-2">
-              <button
-                onClick={() =>
-                  window.open(
-                    `https://wa.me/${ADMIN_WA}?text=Mohon dikirim kode token revisi pendaftaran.`,
-                  )
-                }
-                className="w-full py-2 text-emerald-600 font-bold text-[10px] uppercase hover:bg-emerald-50 rounded cursor-pointer transition-all"
-              >
-                Minta Kode Token
-              </button>
-              <button
-                onClick={() => {
-                  setShowTokenModal(false);
-                  setInputToken("");
-                  setFormData({ kategori: formData.kategori });
-                }}
-                className="w-full py-2 text-slate-400 font-bold text-[9px] uppercase cursor-pointer"
-              >
-                Batal
-              </button>
+            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-black uppercase text-slate-900 tracking-tight">
+                  Detail Bidang Komisi
+                </h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                  Penjelasan Fokus Pembahasan
+                </p>
+              </div>
             </div>
+            <div className="space-y-4 text-sm font-medium">
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <p className="font-black text-red-600 uppercase text-[11px] mb-1 tracking-wider">
+                  Komisi A
+                </p>
+                <p className="text-slate-700 leading-snug text-xs font-semibold">
+                  Kesekretariatan, Organisasi, dan Sistem Informasi.
+                </p>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <p className="font-black text-blue-600 uppercase text-[11px] mb-1 tracking-wider">
+                  Komisi B
+                </p>
+                <p className="text-slate-700 leading-snug text-xs font-semibold">
+                  Advokasi, Kesejahteraan, dan Kemitraan Strategis serta
+                  Pernyataan Sikap Konferensi.
+                </p>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <p className="font-black text-emerald-600 uppercase text-[11px] mb-1 tracking-wider">
+                  Komisi C
+                </p>
+                <p className="text-slate-700 leading-snug text-xs font-semibold">
+                  Keuangan, Akademik, dan Pengembangan Usaha.
+                </p>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <p className="font-black text-amber-600 uppercase text-[11px] mb-1 tracking-wider">
+                  Komisi D
+                </p>
+                <p className="text-slate-700 leading-snug text-xs font-semibold">
+                  Kelembagaan Pendidikan, Sosial Budaya, dan Karakter.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowKomisiModal(false)}
+              className="w-full py-3 mt-6 bg-slate-900 hover:bg-black text-white rounded-xl font-bold text-xs uppercase shadow-md active:scale-95 transition-all cursor-pointer"
+            >
+              Mengerti & Tutup
+            </button>
           </div>
         </div>
       )}
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {Array.from({ length: totalSteps }).map((_, i) => {
+            const stepNum = i + 1;
+            const isActive = stepNum === currentStep;
+            const isCompleted = stepNum < currentStep;
+            return (
+              <div key={stepNum} className="flex items-center">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${isActive ? "gradient-bg text-white scale-110 shadow-lg" : isCompleted ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"}`}
+                >
+                  {isCompleted ? "✓" : stepNum}
+                </div>
+                {stepNum < totalSteps && (
+                  <div
+                    className={`w-4 md:w-8 h-0.5 ${isCompleted ? "bg-emerald-500" : "bg-slate-100"}`}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden p-5 md:p-8">
+          {renderStepContent()}
+
+          <div className="flex justify-between mt-10 pt-6 border-t border-slate-100 gap-2">
+            <div className="flex gap-1 md:gap-2">
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  onClick={() => moveStep(-1)}
+                  className="px-3 md:px-6 py-3 rounded border font-bold text-slate-400 text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Kembali
+                </button>
+              )}
+              {isRevisionMode && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="px-3 md:px-6 py-3 border border-red-100 text-red-400 font-bold rounded text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+              )}
+            </div>
+            <div className="flex gap-1 md:gap-2">
+              <button
+                type="button"
+                onClick={() => moveStep(1)}
+                className="px-5 md:px-8 py-3 gradient-bg text-white font-bold rounded shadow-md text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+              >
+                {currentStep === totalSteps ? "Simpan & Cetak" : "Lanjut"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {showTokenModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+            <div className="bg-white w-full max-w-sm rounded-xl p-6 text-center shadow-2xl">
+              <h3 className="text-lg font-black uppercase mb-2 text-slate-900">
+                Akses Verifikasi
+              </h3>
+              <p className="text-[10px] text-slate-500 font-bold mb-6 uppercase tracking-wider leading-relaxed">
+                Masukkan 6 digit Kode Token Revisi untuk melanjutkan pengeditan
+                data.
+              </p>
+              <input
+                type="text"
+                value={inputToken}
+                onChange={(e) => setInputToken(e.target.value)}
+                className="w-full px-4 py-3 border text-center font-black tracking-widest text-xl uppercase mb-4 rounded-lg focus:ring-2 focus:ring-red-600 outline-none"
+                placeholder="------"
+              />
+              <button
+                onClick={verifyToken}
+                className="w-full py-3 bg-red-600 text-white rounded font-bold text-xs uppercase shadow-md active:scale-95 transition-all cursor-pointer"
+              >
+                Buka Data
+              </button>
+              <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-2">
+                <button
+                  onClick={() =>
+                    window.open(
+                      `https://wa.me/${ADMIN_WA}?text=Mohon dikirim kode token revisi pendaftaran.`,
+                    )
+                  }
+                  className="w-full py-2 text-emerald-600 font-bold text-[10px] uppercase hover:bg-emerald-50 rounded cursor-pointer transition-all"
+                >
+                  Minta Kode Token
+                </button>
+                <button
+                  onClick={() => {
+                    setShowTokenModal(false);
+                    setInputToken("");
+                    setFormData({ kategori: formData.kategori });
+                  }}
+                  className="w-full py-2 text-slate-400 font-bold text-[9px] uppercase cursor-pointer"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

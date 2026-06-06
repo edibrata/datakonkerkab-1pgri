@@ -198,6 +198,12 @@ export function AdminTab({
     return rows;
   }, [submissions, search, filter, sortConfig]);
 
+  const isAllVisibleSelected =
+    flattenedRows.length > 0 &&
+    flattenedRows.every((r) =>
+      selectedRows.has(`${r.id}|${r.i}|${r.kategori}`),
+    );
+
   const handleSort = (key: string) => {
     setSortConfig((prev) =>
       prev.key === key ? { key, dir: prev.dir * -1 } : { key, dir: 1 },
@@ -205,13 +211,15 @@ export function AdminTab({
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSet = new Set(selectedRows);
     if (e.target.checked) {
-      setSelectedRows(
-        new Set(flattenedRows.map((r) => `${r.id}|${r.i}|${r.kategori}`)),
-      );
+      flattenedRows.forEach((r) => newSet.add(`${r.id}|${r.i}|${r.kategori}`));
     } else {
-      setSelectedRows(new Set());
+      flattenedRows.forEach((r) =>
+        newSet.delete(`${r.id}|${r.i}|${r.kategori}`),
+      );
     }
+    setSelectedRows(newSet);
   };
 
   const handleSelectRow = (val: string) => {
@@ -502,10 +510,7 @@ export function AdminTab({
                 <input
                   type="checkbox"
                   onChange={handleSelectAll}
-                  checked={
-                    selectedRows.size > 0 &&
-                    selectedRows.size === flattenedRows.length
-                  }
+                  checked={isAllVisibleSelected}
                   className="rounded text-red-600 focus:ring-0 cursor-pointer"
                 />
               </th>
