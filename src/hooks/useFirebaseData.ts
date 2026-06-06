@@ -25,7 +25,7 @@ export const useFirebaseData = () => {
       (snapshot) => {
         const data: SubmissionData[] = [];
         snapshot.forEach((doc) => {
-          data.push({ id: doc.id, ...doc.data() } as SubmissionData);
+          data.push({ ...doc.data(), id: doc.id } as SubmissionData);
         });
         setSubmissions(data);
         setLoading(false);

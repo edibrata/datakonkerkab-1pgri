@@ -720,7 +720,7 @@ export function AdminTab({
           </thead>
           <tbody className="divide-y divide-slate-100 text-[11px] font-medium text-slate-700">
             {flattenedRows.map((r, idx) => {
-              const rowVal = `${r.id}|${r.i}|${r.kategori}|${idx}`;
+              const rowVal = `${r.id}|${r.i}|${r.kategori}`;
               const isActionActiveN = activeRowActions === `n_${r.id}_${r.i}`;
               const isActionActiveT = activeRowActions === `t_${r.id}_${r.i}`;
               const waMsg = encodeURIComponent(

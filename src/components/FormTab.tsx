@@ -194,6 +194,7 @@ export function FormTab({
 
   const submitForm = async () => {
     const finalData = { ...formData };
+    delete finalData.id;
     finalData.waktu_simpan = new Date().toLocaleString("id-ID");
 
     if (finalData.kategori === "PESERTA CABANG") {
@@ -275,6 +276,7 @@ export function FormTab({
 
   const saveAndAddNext = async () => {
     const finalData = { ...formData };
+    delete finalData.id;
     finalData.waktu_simpan = new Date().toLocaleString("id-ID");
 
     for (let i = 2; i <= 4; i++) {
