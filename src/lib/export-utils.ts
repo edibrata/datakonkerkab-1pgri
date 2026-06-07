@@ -72,7 +72,7 @@ export const executeRoomMappingPDF = async (
     body: rows,
     theme: "striped",
     showHead: "everyPage",
-    headStyles: { fillColor: [185, 28, 28], fontSize: 9, halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
     styles: { fontSize: 8, cellPadding: 3 },
     columnStyles: {
       0: { halign: "center", cellWidth: 14 },
@@ -213,7 +213,7 @@ export const executeRoomSortedPDF = async (
     body: rows,
     theme: "grid",
     showHead: "everyPage",
-    headStyles: { fillColor: [185, 28, 28], fontSize: 9, halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
     styles: { fontSize: 8, cellPadding: 3, textColor: [0, 0, 0] },
     columnStyles: {
       0: { halign: "center", cellWidth: 12 },
@@ -305,7 +305,7 @@ export const executeTshirtRecapPDF = async (
     head: [["Ukuran", "Laki-laki", "Perempuan", "Total"]],
     body: summaryRows,
     theme: "grid",
-    headStyles: { fillColor: [185, 28, 28], halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], halign: "center" },
     styles: { fontSize: 10, cellPadding: 5, halign: "center" },
     margin: { left: 30, right: 30 },
   });
@@ -352,7 +352,7 @@ export const executeTshirtReceiptPDF = async (
     body: rows,
     theme: "grid",
     showHead: "everyPage",
-    headStyles: { fillColor: [185, 28, 28], fontSize: 9, halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
     styles: { fontSize: 8, cellPadding: 4 },
     columnStyles: {
       0: { halign: "center", cellWidth: 14 },
@@ -402,7 +402,7 @@ export const executeMasterKomisiPDF = async (
     body: rows,
     theme: "grid",
     showHead: "everyPage",
-    headStyles: { fillColor: [185, 28, 28], fontSize: 10, halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 10, halign: "center" },
     styles: { fontSize: 9, cellPadding: 2 },
     columnStyles: {
       0: { halign: "center", cellWidth: 14 },
@@ -459,7 +459,7 @@ export const executeSidangKomisiPDF = async (
       body: rows,
       theme: "striped",
       showHead: "everyPage",
-      headStyles: { fillColor: [185, 28, 28], fontSize: 10, halign: "center" },
+      headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 10, halign: "center" },
       styles: { fontSize: 9, cellPadding: 2 },
       columnStyles: { 0: { halign: "center", cellWidth: 14 } },
       didDrawPage: (d: any) => {
@@ -531,7 +531,7 @@ export const executeAttendancePDF = async (
       body: rows,
       theme: "grid",
       showHead: "everyPage",
-      headStyles: { fillColor: [185, 28, 28], fontSize: 10, halign: "center" },
+      headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 10, halign: "center" },
       styles: { fontSize: 9, cellPadding: 3 },
       columnStyles: {
         0: { halign: "center", cellWidth: 18 },
@@ -624,7 +624,7 @@ export const executePlenoAttendancePDF = async (
     body: rows,
     theme: "grid",
     showHead: "everyPage",
-    headStyles: { fillColor: [185, 28, 28], fontSize: 10, halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 10, halign: "center" },
     styles: { fontSize: 8, cellPadding: 3 },
     margin: { top: 20 },
     columnStyles: {

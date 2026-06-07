@@ -208,16 +208,18 @@ export function AdminTab({
     ];
 
     const assignRooms = (people: FlatAdminRow[], availableRooms: string[]) => {
-      const overridePeople = people.filter(
-        (p) => (p.sD as any)[`p${p.i}_room_override`],
-      );
-      overridePeople.forEach(
-        (p) => (p.room = (p.sD as any)[`p${p.i}_room_override`]),
-      );
+      const overridePeople = people.filter((p) => {
+        const ovr = (p.sD as any)[`p${p.i}_room_override`];
+        return ovr && availableRooms.includes(ovr);
+      });
+      overridePeople.forEach((p) => {
+        p.room = (p.sD as any)[`p${p.i}_room_override`];
+      });
 
-      const normalPeople = people.filter(
-        (p) => !(p.sD as any)[`p${p.i}_room_override`],
-      );
+      const normalPeople = people.filter((p) => {
+        const ovr = (p.sD as any)[`p${p.i}_room_override`];
+        return !ovr || !availableRooms.includes(ovr);
+      });
 
       const rooms = availableRooms.map((name) => ({
         name,
@@ -225,7 +227,7 @@ export function AdminTab({
         capacity: 4,
       }));
 
-      // Account for overrides
+      // Account for valid overrides
       overridePeople.forEach((p) => {
         const r = rooms.find((room) => room.name === p.room);
         if (r && r.capacity > 0) r.capacity -= 1;
@@ -240,62 +242,44 @@ export function AdminTab({
         byBranch[p.branch].push(p);
       }
 
-      const remainders: FlatAdminRow[][] = [];
+      const groups = Object.values(byBranch).sort(
+        (a, b) => b.length - a.length || a[0].branch.localeCompare(b[0].branch),
+      );
 
-      // 1. Give full rooms to branches with >= 4 people
-      for (const branch of Object.keys(byBranch).sort()) {
-        const group = byBranch[branch];
-        while (group.length >= 4) {
-          const room = getEmptyRoom();
-          if (!room) break;
-          const chunk = group.splice(0, 4);
-          chunk.forEach((p) => (p.room = room.name));
-          room.occupants.push(...chunk as never[]);
-          room.capacity -= 4;
-        }
-        if (group.length > 0) {
-          remainders.push(group);
-        }
-      }
-
-      // 2. Pack remainders
-      // Sort to prioritize placing larger groups (e.g., 3 people) together
-      remainders.sort((a, b) => b.length - a.length);
-
-      for (const group of remainders) {
-        let room = rooms.find(
-          (r) => r.capacity === group.length && r.occupants.length > 0,
-        );
-        if (!room) {
-          room = rooms.find(
-            (r) => r.capacity > group.length && r.occupants.length > 0,
-          );
-        }
-        if (!room) room = getEmptyRoom();
-        if (!room) room = rooms.find((r) => r.capacity > 0);
-
-        if (room && room.capacity >= group.length) {
-          const chunk = group.splice(0, group.length);
-          chunk.forEach((p) => (p.room = room!.name));
-          room.occupants.push(...chunk as never[]);
-          room.capacity -= chunk.length;
-        }
-
-        // If no room is large enough, we must split them
+      for (const group of groups) {
         while (group.length > 0) {
-          const anyRoomWithSpace = rooms.find((r) => r.capacity > 0);
-          if (!anyRoomWithSpace) {
+          // 1. Try to find a partially filled room that perfectly fits the group
+          let room = rooms.find(
+            (r) => r.capacity === group.length && r.occupants.length > 0,
+          );
+          // 2. Or a totally empty room
+          if (!room && group.length === 4) {
+             room = getEmptyRoom();
+          }
+          // 3. Try to find a partially filled room that has enough space
+          if (!room) {
+            room = rooms.find(
+              (r) => r.capacity >= group.length && r.occupants.length > 0,
+            );
+          }
+          // 4. Fallback to an empty room
+          if (!room) room = getEmptyRoom();
+          
+          // 5. If no space large enough, find ANY room with space (have to split them)
+          if (!room) room = rooms.find((r) => r.capacity > 0);
+
+          if (!room) {
+            // No rooms left with any space
             group.forEach((p) => (p.room = "Waiting List"));
             group.length = 0;
             break;
           }
-          const chunk = group.splice(
-            0,
-            Math.min(group.length, anyRoomWithSpace.capacity),
-          );
-          chunk.forEach((p) => (p.room = anyRoomWithSpace.name));
-          anyRoomWithSpace.occupants.push(...chunk as never[]);
-          anyRoomWithSpace.capacity -= chunk.length;
+
+          const take = Math.min(group.length, room.capacity);
+          const chunk = group.splice(0, take);
+          chunk.forEach((p) => (p.room = room!.name));
+          room.occupants.push(...(chunk as never[]));
+          room.capacity -= chunk.length;
         }
       }
 
