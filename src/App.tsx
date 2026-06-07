@@ -12,7 +12,7 @@ import { AdminLogin } from "./components/AdminLogin";
 export default function App() {
   const { submissions, isRegistrationOpen, loading } = useFirebaseData();
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(!!localStorage.getItem("pgri_admin_pass"));
-  const [activeTab, setActiveTab] = useState(!!localStorage.getItem("pgri_admin_pass") ? "beranda" : "info_kamar");
+  const [activeTab, setActiveTab] = useState(!!localStorage.getItem("pgri_admin_pass") ? "beranda" : "info_peserta");
 
   // Modal States
   const [modalConfig, setModalConfig] = useState<{
@@ -153,7 +153,7 @@ export default function App() {
               </>
             )}
 
-            {activeTab === "info_kamar" && (
+            {activeTab === "info_peserta" && (
               <RoomTab submissions={submissions} />
             )}
           </>

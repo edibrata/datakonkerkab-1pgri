@@ -12,7 +12,7 @@ export function Navigation({ activeTab, onTabChange, isAdminLoggedIn }: Props) {
       <div className="max-w-[96%] mx-auto px-4 flex justify-between items-center h-14 md:h-16">
         <div
           className="flex items-center gap-2 md:gap-3 cursor-pointer group tooltip-container"
-          onClick={() => onTabChange("beranda")}
+          onClick={() => onTabChange(isAdminLoggedIn ? "beranda" : "info_peserta")}
         >
           <img
             src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
@@ -31,15 +31,17 @@ export function Navigation({ activeTab, onTabChange, isAdminLoggedIn }: Props) {
         </div>
 
         <div className="flex items-center h-full">
-          <button
-            onClick={() => onTabChange("beranda")}
-            className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "beranda" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
-          >
-            <Home className="h-6 w-6" />
-            <span className="tooltip-text" style={{ width: "auto" }}>
-              Beranda
-            </span>
-          </button>
+          {isAdminLoggedIn && (
+            <button
+              onClick={() => onTabChange("beranda")}
+              className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "beranda" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
+            >
+              <Home className="h-6 w-6" />
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Beranda
+              </span>
+            </button>
+          )}
           
           {isAdminLoggedIn && (
             <button
@@ -54,12 +56,12 @@ export function Navigation({ activeTab, onTabChange, isAdminLoggedIn }: Props) {
           )}
           
           <button
-            onClick={() => onTabChange("info_kamar")}
-            className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "info_kamar" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
+            onClick={() => onTabChange("info_peserta")}
+            className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "info_peserta" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
           >
             <Users className="h-6 w-6" />
             <span className="tooltip-text" style={{ width: "auto" }}>
-              Info Kamar
+              Info Peserta
             </span>
           </button>
           

@@ -10,6 +10,7 @@ interface Props {
 
 export function RoomTab({ submissions }: Props) {
   const [search, setSearch] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const flattenedRows = useMemo(() => {
     let rows = getFlattenedRows(submissions, { key: "name", dir: 1 });
@@ -95,64 +96,91 @@ export function RoomTab({ submissions }: Props) {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 text-slate-700 mb-6 shadow-sm">
               <Search className="w-6 h-6" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">Cari Alokasi Kamar</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">Pencarian Profil Peserta</h2>
             <p className="text-slate-500 font-medium max-w-lg mx-auto leading-relaxed">
-              Silakan ketik nama lengkap atau nama daerah asal Anda untuk mengetahui detail penempatan kamar serta rekan sekamar.
+              Ketik nama lengkap atau cabang untuk melihat detail kepesertaan, alokasi kamar, dan rekan sekamar.
             </p>
           </div>
           
-          <div className="relative mb-8 max-w-2xl mx-auto group">
-            <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none transition-colors">
+          <div className="relative mb-2 max-w-2xl mx-auto group z-20">
+            <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none transition-colors z-10">
               <Search className="h-5 w-5 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
             </div>
             <input
               type="text"
-              className="block w-full pl-14 pr-6 py-4 md:py-5 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-400 sm:text-base transition-all placeholder:text-slate-400 text-slate-800 outline-none shadow-sm"
-              placeholder="Tulis nama lengkap atau cabang..."
+              className="block w-full pl-14 pr-6 py-4 md:py-5 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-400 sm:text-base transition-all placeholder:text-slate-400 text-slate-800 outline-none shadow-sm relative z-10"
+              placeholder="Ketik nama untuk mencari profil..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             />
-          </div>
 
-          {search.length > 0 && (
-            <div className="max-w-2xl mx-auto space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-              {flattenedRows.length > 0 ? (
-                flattenedRows.map((r, idx) => (
-                  <div 
-                    key={idx}
-                    onClick={() => setSelectedPerson(r)}
-                    className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-300 cursor-pointer shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 group"
-                  >
-                    <PhotoAvatar photoStr={r.foto} name={r.name} sizeClass="w-12 h-12 md:w-14 md:h-14 ring-1 ring-slate-100" />
-                    <div className="flex-1 min-w-0 py-1">
-                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-3 mb-1.5">
-                          <p className="font-bold text-slate-900 text-base md:text-lg group-hover:text-slate-700 transition-colors truncate">{r.name}</p>
-                          {r.kom && r.kom !== "-" && (
-                             <span className="inline-flex items-center text-[10px] font-bold uppercase text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md tracking-wider border border-slate-200">
-                              {r.kom}
-                            </span>
-                          )}
-                       </div>
-                      <div className="flex items-center text-xs md:text-sm font-medium text-slate-500">
-                        <MapPin className="w-3.5 h-3.5 mr-1.5 text-slate-400 flex-shrink-0" />
-                        <span className="truncate">{r.branch}</span>
+            {/* Dropdown Suggestions */}
+            {search.length > 0 && showSuggestions && (
+              <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-100 shadow-[0_10px_40px_rgb(0,0,0,0.08)] rounded-2xl overflow-hidden max-h-[360px] overflow-y-auto custom-scrollbar opacity-100 transition-all z-50">
+                {flattenedRows.length > 0 ? (
+                  <div className="p-2 space-y-1">
+                  {flattenedRows.slice(0, 10).map((r, idx) => (
+                    <div 
+                      key={idx}
+                      onClick={(e) => {
+                         e.preventDefault();
+                         e.stopPropagation();
+                         setSelectedPerson(r);
+                         setShowSuggestions(false);
+                      }}
+                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors"
+                    >
+                      <PhotoAvatar photoStr={r.foto} name={r.name} sizeClass="w-10 h-10 md:w-12 md:h-12 ring-1 ring-slate-100" />
+                      <div className="flex-1 min-w-0">
+                         <div className="flex items-center justify-between gap-2 mb-1">
+                            <p className="font-bold text-slate-900 text-sm md:text-base truncate">{r.name}</p>
+                            {r.kom && r.kom !== "-" && (
+                               <span className="inline-flex items-center text-[9px] font-bold uppercase text-slate-600 bg-slate-100 px-2 py-0.5 rounded tracking-wider border border-slate-200 flex-shrink-0">
+                                {r.kom}
+                              </span>
+                            )}
+                         </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center text-xs font-medium text-slate-500">
+                              <MapPin className="w-3 h-3 mr-1 text-slate-400 flex-shrink-0" />
+                              <span className="truncate">{r.branch}</span>
+                            </div>
+                            <div className="flex items-center text-xs font-medium text-slate-400 border-l border-slate-200 pl-3">
+                              <span className="truncate uppercase text-[9px] tracking-wider font-bold mr-1.5">Kamar:</span> 
+                              <span className="font-bold text-slate-700">{r.room || "-"}</span>
+                            </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="pl-5 border-l border-slate-100 hidden md:flex flex-col items-center justify-center min-w-[80px]">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Kamar</span>
-                        <span className="text-xl font-black text-slate-800">{r.room || "-"}</span>
+                  ))}
+                  {flattenedRows.length > 10 && (
+                    <div className="p-3 text-center text-xs font-bold text-slate-400 bg-slate-50/50 rounded-lg mt-1">
+                      Menampilkan 10 dari {flattenedRows.length} hasil. Ketik lebih spesifik...
                     </div>
+                  )}
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-16 px-4 rounded-3xl bg-slate-50 border border-slate-200 border-dashed">
-                  <ShieldAlert className="w-10 h-10 text-slate-300 mx-auto mb-4" />
-                  <p className="text-slate-500 font-medium text-lg">Tidak ada kecocokan untuk "{search}".</p>
-                  <p className="text-slate-400 mt-1">Coba gunakan nama lengkap atau kata kunci lain.</p>
-                </div>
-              )}
-            </div>
-          )}
+                ) : (
+                  <div className="text-center py-12 px-4">
+                    <ShieldAlert className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500 font-medium">Tidak ada kecocokan untuk "{search}".</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-8 text-center bg-blue-50/50 rounded-2xl p-6 border border-blue-100 max-w-2xl mx-auto">
+             <BadgeInfo className="w-6 h-6 text-blue-400 mx-auto mb-3" />
+             <p className="text-sm text-blue-800 font-medium">
+                Pencarian profil ini memudahkan Anda untuk menemukan rekan delegasi, alokasi penginapan, serta melihat susunan teman sekamar yang telah diatur oleh panitia.
+             </p>
+          </div>
+
         </div>
       ) : (
         <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
