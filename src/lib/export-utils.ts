@@ -44,17 +44,67 @@ export const executeRoomMappingPDF = async (
   const doc = new jsPDF("p", "mm", "a4");
   const data = [...flattenedRows];
   if (data.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
-  const priority: Record<string, number> = {
-    "PESERTA CABANG": 1,
-    PANITIA: 2,
-    PENINJAU: 3,
-  };
-  data.sort(
-    (a, b) =>
-      priority[a.kategori] - priority[b.kategori] ||
+  const ROOM_ORDER = [
+    "ALPHA-1",
+    "ALPHA-3",
+    "ALPHA-5",
+    "ALPHA-7",
+    "ALPHA-9",
+    "ALPHA-11",
+    "ALPHA-15",
+    "ALPHA-17",
+    "ALPHA-19",
+    "ALPHA-21",
+    "ALPHA-23",
+    "ALPHA-25",
+    "ALPHA-27",
+    "ALPHA-29",
+    "ALPHA-31",
+    "ALPHA-33",
+    "ALPHA-8",
+    "ALPHA-10",
+    "ALPHA-12",
+    "ALPHA-14",
+    "ALPHA-16",
+    "ALPHA-18",
+    "ALPHA-20",
+    "ALPHA-22",
+    "ALPHA-24",
+    "ALPHA-26",
+    "ALPHA-28",
+    "ALPHA-30",
+    "SUPERIOR-14",
+    "SUPERIOR-16",
+    "SUPERIOR-18",
+    "SUPERIOR-20",
+    "SUPERIOR-22",
+    "SUPERIOR-24",
+    "SUPERIOR-26",
+  ];
+
+  data.sort((a, b) => {
+    const aRoomStr = String(a.room);
+    const bRoomStr = String(b.room);
+    const aIdx = ROOM_ORDER.indexOf(aRoomStr);
+    const bIdx = ROOM_ORDER.indexOf(bRoomStr);
+    const aOrder = aIdx === -1 ? 999 : aIdx;
+    const bOrder = bIdx === -1 ? 999 : bIdx;
+
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    if (aRoomStr !== bRoomStr) return aRoomStr.localeCompare(bRoomStr);
+    
+    // Sort by Category, then Branch, then Name if same room
+    const priority: Record<string, number> = {
+      "PESERTA CABANG": 1,
+      PANITIA: 2,
+      PENINJAU: 3,
+    };
+    return (
+      (priority[a.kategori] || 99) - (priority[b.kategori] || 99) ||
       a.branch.localeCompare(b.branch) ||
-      a.name.localeCompare(b.name),
-  );
+      a.name.localeCompare(b.name)
+    );
+  });
   const rows = data.map((r, i) => [
     i + 1,
     r.branch,
