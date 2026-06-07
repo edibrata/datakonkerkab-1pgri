@@ -6,12 +6,14 @@ import { Users, Database } from "lucide-react";
 interface Props {
   submissions: SubmissionData[];
   isRegistrationOpen: boolean;
+  isAdminLoggedIn: boolean;
   onOpenCategoryModal: () => void;
 }
 
 export function HomeTab({
   submissions,
   isRegistrationOpen,
+  isAdminLoggedIn,
   onOpenCategoryModal,
 }: Props) {
   const [timeLeft, setTimeLeft] = useState<{
@@ -194,17 +196,19 @@ export function HomeTab({
               )}
             </div>
 
-            <button
-              onClick={onOpenCategoryModal}
-              disabled={!isOpen}
-              className={`px-8 py-3 rounded font-bold shadow-md text-[11px] uppercase tracking-widest transition-all ${
-                isOpen
-                  ? "gradient-bg text-white active:scale-95 cursor-pointer"
-                  : "bg-slate-300 text-slate-500 cursor-not-allowed"
-              }`}
-            >
-              {isOpen ? "Daftar Sekarang" : "Pendaftaran Ditutup"}
-            </button>
+            {isAdminLoggedIn && (
+              <button
+                onClick={onOpenCategoryModal}
+                disabled={!isOpen}
+                className={`px-8 py-3 rounded font-bold shadow-md text-[11px] uppercase tracking-widest transition-all ${
+                  isOpen
+                    ? "gradient-bg text-white active:scale-95 cursor-pointer"
+                    : "bg-slate-300 text-slate-500 cursor-not-allowed"
+                }`}
+              >
+                {isOpen ? "Daftar Sekarang" : "Pendaftaran Ditutup"}
+              </button>
+            )}
           </div>
         </div>
       </div>

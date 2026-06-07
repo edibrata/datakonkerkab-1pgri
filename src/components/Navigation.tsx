@@ -1,11 +1,12 @@
-import { Home, ClipboardList, Database, Users } from "lucide-react";
+import { Home, ClipboardList, Database, Users, Lock, Unlock } from "lucide-react";
 
 interface Props {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isAdminLoggedIn: boolean;
 }
 
-export function Navigation({ activeTab, onTabChange }: Props) {
+export function Navigation({ activeTab, onTabChange, isAdminLoggedIn }: Props) {
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50 border-b border-slate-200">
       <div className="max-w-[96%] mx-auto px-4 flex justify-between items-center h-14 md:h-16">
@@ -39,15 +40,19 @@ export function Navigation({ activeTab, onTabChange }: Props) {
               Beranda
             </span>
           </button>
-          <button
-            onClick={() => onTabChange("formulir")}
-            className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "formulir" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
-          >
-            <ClipboardList className="h-6 w-6" />
-            <span className="tooltip-text" style={{ width: "auto" }}>
-              Pendaftaran
-            </span>
-          </button>
+          
+          {isAdminLoggedIn && (
+            <button
+              onClick={() => onTabChange("formulir")}
+              className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "formulir" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
+            >
+              <ClipboardList className="h-6 w-6" />
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Pendaftaran
+              </span>
+            </button>
+          )}
+          
           <button
             onClick={() => onTabChange("info_kamar")}
             className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "info_kamar" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
@@ -57,15 +62,28 @@ export function Navigation({ activeTab, onTabChange }: Props) {
               Info Kamar
             </span>
           </button>
-          <button
-            onClick={() => onTabChange("data")}
-            className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "data" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
-          >
-            <Database className="h-6 w-6" />
-            <span className="tooltip-text" style={{ width: "auto" }}>
-              Database Admin
-            </span>
-          </button>
+          
+          {isAdminLoggedIn ? (
+            <button
+              onClick={() => onTabChange("data")}
+              className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "data" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
+            >
+              <Database className="h-6 w-6" />
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Database Admin
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => onTabChange("data")}
+              className={`nav-link px-3 ml-2 transition-all flex items-center justify-center  group tooltip-container text-slate-300 hover:text-slate-500`}
+            >
+              <Lock className="h-4 w-4" />
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Buka Admin
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </nav>

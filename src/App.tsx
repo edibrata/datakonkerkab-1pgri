@@ -11,8 +11,8 @@ import { AdminLogin } from "./components/AdminLogin";
 
 export default function App() {
   const { submissions, isRegistrationOpen, loading } = useFirebaseData();
-  const [activeTab, setActiveTab] = useState("beranda");
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(!!localStorage.getItem("pgri_admin_pass"));
+  const [activeTab, setActiveTab] = useState(!!localStorage.getItem("pgri_admin_pass") ? "beranda" : "info_kamar");
 
   // Modal States
   const [modalConfig, setModalConfig] = useState<{
@@ -70,7 +70,7 @@ export default function App() {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col text-sm">
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navigation activeTab={activeTab} onTabChange={setActiveTab} isAdminLoggedIn={isAdminLoggedIn} />
 
       <main className="max-w-[96%] mx-auto px-4 py-6 md:py-8 flex-grow w-full">
         {loading ? (
@@ -83,6 +83,7 @@ export default function App() {
               <HomeTab
                 submissions={submissions}
                 isRegistrationOpen={isRegistrationOpen}
+                isAdminLoggedIn={isAdminLoggedIn}
                 onOpenCategoryModal={() => {
                   if (!isRegistrationOpen)
                     return showModal(
