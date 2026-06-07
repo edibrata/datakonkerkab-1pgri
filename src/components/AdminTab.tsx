@@ -159,17 +159,12 @@ export function AdminTab({
       }
     });
 
-    const allPeopleForRooms = [...allPeserta, ...others];
-
-    // Room Logic (Pooling Gender)
-    const males = allPeopleForRooms
+    // Room Logic (Pooling Gender - ONLY FOR PESERTA CABANG)
+    const males = allPeserta
       .filter((p) => p.jk === "LAKI-LAKI")
       .sort((a, b) => a.branch.localeCompare(b.branch));
-    const females = allPeopleForRooms
+    const females = allPeserta
       .filter((p) => p.jk === "PEREMPUAN")
-      .sort((a, b) => a.branch.localeCompare(b.branch));
-    const realOthers = allPeopleForRooms
-      .filter((p) => p.jk !== "LAKI-LAKI" && p.jk !== "PEREMPUAN")
       .sort((a, b) => a.branch.localeCompare(b.branch));
 
     const FEMALE_ROOMS = [
@@ -266,45 +261,31 @@ export function AdminTab({
         }
       }
 
-      const groups = remainders.sort(
-        (a, b) => b.length - a.length || a[0].branch.localeCompare(b[0].branch),
-      );
+      // OPSI 4: Sequential Filling for Remainders
+      // Flatten all remainder people into a single queue
+      const sequentialQueue: FlatAdminRow[] = [];
+      
+      const remaindersSorted = remainders.sort((a, b) => a[0].branch.localeCompare(b[0].branch));
+      for (const group of remaindersSorted) {
+        sequentialQueue.push(...group);
+      }
 
-      for (const group of groups) {
-        while (group.length > 0) {
-          // 1. Try to find a partially filled room that perfectly fits the group
-          let room = rooms.find(
-            (r) => r.capacity === group.length && r.occupants.length > 0,
-          );
-          // 2. Or a totally empty room
-          if (!room && group.length === 4) {
-             room = getEmptyRoom();
-          }
-          // 3. Try to find a partially filled room that has enough space
-          if (!room) {
-            room = rooms.find(
-              (r) => r.capacity >= group.length && r.occupants.length > 0,
-            );
-          }
-          // 4. Fallback to an empty room
-          if (!room) room = getEmptyRoom();
-          
-          // 5. If no space large enough, find ANY room with space (have to split them)
-          if (!room) room = rooms.find((r) => r.capacity > 0);
-
-          if (!room) {
-            // No rooms left with any space
-            group.forEach((p) => (p.room = "Waiting List"));
-            group.length = 0;
-            break;
-          }
-
-          const take = Math.min(group.length, room.capacity);
-          const chunk = group.splice(0, take);
-          chunk.forEach((p) => (p.room = room!.name));
-          room.occupants.push(...(chunk as never[]));
-          room.capacity -= chunk.length;
+      // Distribute them sequentially into the remaining capacity of all rooms
+      let qIdx = 0;
+      for (const room of rooms) {
+        while (room.capacity > 0 && qIdx < sequentialQueue.length) {
+          const person = sequentialQueue[qIdx];
+          person.room = room.name;
+          room.occupants.push(person as never);
+          room.capacity -= 1;
+          qIdx++;
         }
+      }
+
+      // Any remaining people go to waiting list
+      while (qIdx < sequentialQueue.length) {
+        sequentialQueue[qIdx].room = "Waiting List";
+        qIdx++;
       }
 
       // Safety net
@@ -316,11 +297,11 @@ export function AdminTab({
     assignRooms(males, MALE_ROOMS);
     assignRooms(females, FEMALE_ROOMS);
 
-    realOthers.forEach((p) => {
+    others.forEach((p) => {
       p.room = (p.sD as any)[`p${p.i}_room_override`] || "X";
     });
 
-    const rows = [...males, ...females, ...realOthers];
+    const rows = [...allPeserta, ...others];
 
     rows.sort((a, b) => {
       const key = sortConfig.key as keyof FlatAdminRow | "kaos" | "idx";

@@ -153,13 +153,15 @@ export const executeRoomSortedPDF = async (
   ];
 
   data.sort((a, b) => {
-    const aIdx = ROOM_ORDER.indexOf(a.room);
-    const bIdx = ROOM_ORDER.indexOf(b.room);
+    const aRoomStr = String(a.room);
+    const bRoomStr = String(b.room);
+    const aIdx = ROOM_ORDER.indexOf(aRoomStr);
+    const bIdx = ROOM_ORDER.indexOf(bRoomStr);
     const aOrder = aIdx === -1 ? 999 : aIdx;
     const bOrder = bIdx === -1 ? 999 : bIdx;
 
     if (aOrder !== bOrder) return aOrder - bOrder;
-    if (a.room !== b.room) return a.room.localeCompare(b.room);
+    if (aRoomStr !== bRoomStr) return aRoomStr.localeCompare(bRoomStr);
     
     // Sort by Category, then Branch, then Name if same room
     const priority: Record<string, number> = {
@@ -176,22 +178,23 @@ export const executeRoomSortedPDF = async (
 
   const roomCounts: Record<string, number> = {};
   data.forEach((r) => {
-    roomCounts[r.room] = (roomCounts[r.room] || 0) + 1;
+    roomCounts[String(r.room)] = (roomCounts[String(r.room)] || 0) + 1;
   });
 
   const rows: any[] = [];
   const roomSeen = new Set<string>();
 
   data.forEach((r, i) => {
-    const isFirst = !roomSeen.has(r.room);
-    if (isFirst) roomSeen.add(r.room);
+    const rRoomStr = String(r.room);
+    const isFirst = !roomSeen.has(rRoomStr);
+    if (isFirst) roomSeen.add(rRoomStr);
 
     const row: any[] = [i + 1];
 
     if (isFirst) {
       row.push({
         content: r.room,
-        rowSpan: roomCounts[r.room],
+        rowSpan: roomCounts[rRoomStr],
         styles: {
           valign: "middle",
           halign: "center",
