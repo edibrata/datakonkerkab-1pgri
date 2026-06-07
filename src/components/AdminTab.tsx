@@ -36,6 +36,7 @@ interface Props {
   setModalProgress: (progress: number) => void;
   onViewPrevew: (imgData: string) => void;
   onEditEntry: (docId: string, participantIndex?: number) => void;
+  onLogout: () => void;
 }
 
 export function AdminTab({
@@ -45,18 +46,8 @@ export function AdminTab({
   setModalProgress,
   onViewPrevew,
   onEditEntry,
+  onLogout,
 }: Props) {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("pgri_admin_pass"),
-  );
-  const [password, setPassword] = useState(
-    localStorage.getItem("pgri_admin_pass") || "",
-  );
-  const [showPass, setShowPass] = useState(false);
-  const [rememberMe, setRememberMe] = useState(
-    !!localStorage.getItem("pgri_admin_pass"),
-  );
-
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "ts", dir: -1 });
@@ -78,19 +69,9 @@ export function AdminTab({
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-  const checkAdmin = () => {
-    if (password === "adminpgri") {
-      if (rememberMe) localStorage.setItem("pgri_admin_pass", password);
-      setIsLoggedIn(true);
-    } else {
-      showModal("AKSES DITOLAK", "Password salah.", "error");
-    }
-  };
-
   const logout = () => {
-    setIsLoggedIn(false);
-    setPassword("");
     localStorage.removeItem("pgri_admin_pass");
+    onLogout();
   };
 
   const toggleRegistration = async () => {
@@ -353,110 +334,6 @@ export function AdminTab({
     );
     onViewPrevew(d);
   };
-
-  if (!isLoggedIn) {
-    return (
-      <div className="max-w-md mx-auto py-10">
-        <div className="bg-white p-8 rounded border shadow-lg text-center">
-          <img
-            src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
-            alt="Logo"
-            referrerPolicy="no-referrer"
-            className="h-16 w-auto mx-auto mb-6"
-          />
-          <h2 className="text-xl font-bold mb-6 uppercase">
-            Akses Administrator
-          </h2>
-          <div className="relative mb-4">
-            <input
-              type={showPass ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded border text-center font-black pr-12 text-lg tracking-widest outline-none focus:ring-2 focus:ring-slate-900"
-              placeholder="KATA SANDI"
-            />
-            <button
-              onClick={() => setShowPass(!showPass)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-            >
-              {showPass ? (
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.52 13.16 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"
-                  />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <line
-                    x1="2"
-                    x2="22"
-                    y1="2"
-                    y2="22"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.036 12.322a1.012 1.012 0 010-.644C3.399 8.049 7.39 5 12 5s8.601 3.049 9.964 6.678c.07.186.07.388 0 .574-1.364 3.629-5.355 6.678-9.964 6.678s-8.601-3.049-9.964-6.678z"
-                  />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-          <div className="flex items-center gap-2 mb-6 justify-center">
-            <input
-              type="checkbox"
-              id="rememberMe"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded text-red-600"
-            />
-            <label
-              htmlFor="rememberMe"
-              className="text-xs font-bold uppercase text-slate-500 cursor-pointer"
-            >
-              Ingat Saya
-            </label>
-          </div>
-          <button
-            onClick={checkAdmin}
-            className="w-full bg-slate-900 text-white font-bold py-3 rounded text-xs uppercase shadow-md hover:bg-black transition-all cursor-pointer"
-          >
-            Masuk Database
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div

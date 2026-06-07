@@ -7,10 +7,12 @@ import { AdminTab } from "./components/AdminTab";
 import { SubmissionData } from "./types";
 
 import { RoomTab } from "./components/RoomTab";
+import { AdminLogin } from "./components/AdminLogin";
 
 export default function App() {
   const { submissions, isRegistrationOpen, loading } = useFirebaseData();
   const [activeTab, setActiveTab] = useState("beranda");
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(!!localStorage.getItem("pgri_admin_pass"));
 
   // Modal States
   const [modalConfig, setModalConfig] = useState<{
@@ -92,49 +94,64 @@ export default function App() {
                 }}
               />
             )}
-            {activeTab === "formulir" && (
-              <FormTab
-                submissions={submissions}
-                isRegistrationOpen={isRegistrationOpen}
-                initialCategory={selectedCategory}
-                editData={editSubmissionData}
-                startStep={editStartStep}
-                showModal={showModal}
-                onSaveSuccess={() => {
-                  setActiveTab(editSubmissionData ? "data" : "beranda");
-                  setEditSubmissionData(null);
-                  setEditStartStep(undefined);
-                }}
-                onCancel={() => {
-                  setActiveTab(editSubmissionData ? "data" : "beranda");
-                  setEditSubmissionData(null);
-                  setEditStartStep(undefined);
-                }}
-                onChangeCategory={() => setShowCategoryModal(true)}
-              />
-            )}
-            {activeTab === "data" && (
-              <AdminTab
-                submissions={submissions}
-                isRegistrationOpen={isRegistrationOpen}
-                showModal={showModal}
-                setModalProgress={setModalProgress}
-                onViewPrevew={setPreviewImage}
-                onEditEntry={(id: string, participantIndex?: number) => {
-                  const dataToEdit = submissions.find((s) => s.id === id);
-                  if (dataToEdit) {
-                    setEditSubmissionData(dataToEdit);
-                    setSelectedCategory(dataToEdit.kategori || "");
-                    if (participantIndex) {
-                      setEditStartStep(participantIndex + 1);
-                    } else {
+            
+            {(activeTab === "formulir" || activeTab === "data") && !isAdminLoggedIn ? (
+                <AdminLogin 
+                  onLoginSuccess={() => setIsAdminLoggedIn(true)} 
+                  showModal={showModal} 
+                />
+            ) : (
+              <>
+                {activeTab === "formulir" && (
+                  <FormTab
+                    submissions={submissions}
+                    isRegistrationOpen={isRegistrationOpen}
+                    initialCategory={selectedCategory}
+                    editData={editSubmissionData}
+                    startStep={editStartStep}
+                    showModal={showModal}
+                    onSaveSuccess={() => {
+                      setActiveTab(editSubmissionData ? "data" : "beranda");
+                      setEditSubmissionData(null);
                       setEditStartStep(undefined);
-                    }
-                    setActiveTab("formulir");
-                  }
-                }}
-              />
+                    }}
+                    onCancel={() => {
+                      setActiveTab(editSubmissionData ? "data" : "beranda");
+                      setEditSubmissionData(null);
+                      setEditStartStep(undefined);
+                    }}
+                    onChangeCategory={() => setShowCategoryModal(true)}
+                  />
+                )}
+                {activeTab === "data" && (
+                  <AdminTab
+                    submissions={submissions}
+                    isRegistrationOpen={isRegistrationOpen}
+                    showModal={showModal}
+                    setModalProgress={setModalProgress}
+                    onViewPrevew={setPreviewImage}
+                    onLogout={() => {
+                        setIsAdminLoggedIn(false);
+                        setActiveTab("beranda");
+                    }}
+                    onEditEntry={(id: string, participantIndex?: number) => {
+                      const dataToEdit = submissions.find((s) => s.id === id);
+                      if (dataToEdit) {
+                        setEditSubmissionData(dataToEdit);
+                        setSelectedCategory(dataToEdit.kategori || "");
+                        if (participantIndex) {
+                          setEditStartStep(participantIndex + 1);
+                        } else {
+                          setEditStartStep(undefined);
+                        }
+                        setActiveTab("formulir");
+                      }
+                    }}
+                  />
+                )}
+              </>
             )}
+
             {activeTab === "info_kamar" && (
               <RoomTab submissions={submissions} />
             )}
