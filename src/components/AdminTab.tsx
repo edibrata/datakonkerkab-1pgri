@@ -207,19 +207,106 @@ export function AdminTab({
       "SUPERIOR-26",
     ];
 
-    males.forEach((p, idx) => {
-      const rmIdx = Math.floor(idx / 4);
-      p.room =
-        (p.sD as any)[`p${p.i}_room_override`] ||
-        (rmIdx < MALE_ROOMS.length ? MALE_ROOMS[rmIdx] : "Waiting List");
-    });
+    const assignRooms = (people: FlatAdminRow[], availableRooms: string[]) => {
+      const overridePeople = people.filter(
+        (p) => (p.sD as any)[`p${p.i}_room_override`],
+      );
+      overridePeople.forEach(
+        (p) => (p.room = (p.sD as any)[`p${p.i}_room_override`]),
+      );
 
-    females.forEach((p, idx) => {
-      const rmIdx = Math.floor(idx / 4);
-      p.room =
-        (p.sD as any)[`p${p.i}_room_override`] ||
-        (rmIdx < FEMALE_ROOMS.length ? FEMALE_ROOMS[rmIdx] : "Waiting List");
-    });
+      const normalPeople = people.filter(
+        (p) => !(p.sD as any)[`p${p.i}_room_override`],
+      );
+
+      const rooms = availableRooms.map((name) => ({
+        name,
+        occupants: [],
+        capacity: 4,
+      }));
+
+      // Account for overrides
+      overridePeople.forEach((p) => {
+        const r = rooms.find((room) => room.name === p.room);
+        if (r && r.capacity > 0) r.capacity -= 1;
+      });
+
+      const getEmptyRoom = () =>
+        rooms.find((r) => r.occupants.length === 0 && r.capacity === 4);
+
+      const byBranch: Record<string, FlatAdminRow[]> = {};
+      for (const p of normalPeople) {
+        if (!byBranch[p.branch]) byBranch[p.branch] = [];
+        byBranch[p.branch].push(p);
+      }
+
+      const remainders: FlatAdminRow[][] = [];
+
+      // 1. Give full rooms to branches with >= 4 people
+      for (const branch of Object.keys(byBranch).sort()) {
+        const group = byBranch[branch];
+        while (group.length >= 4) {
+          const room = getEmptyRoom();
+          if (!room) break;
+          const chunk = group.splice(0, 4);
+          chunk.forEach((p) => (p.room = room.name));
+          room.occupants.push(...chunk as never[]);
+          room.capacity -= 4;
+        }
+        if (group.length > 0) {
+          remainders.push(group);
+        }
+      }
+
+      // 2. Pack remainders
+      // Sort to prioritize placing larger groups (e.g., 3 people) together
+      remainders.sort((a, b) => b.length - a.length);
+
+      for (const group of remainders) {
+        let room = rooms.find(
+          (r) => r.capacity === group.length && r.occupants.length > 0,
+        );
+        if (!room) {
+          room = rooms.find(
+            (r) => r.capacity > group.length && r.occupants.length > 0,
+          );
+        }
+        if (!room) room = getEmptyRoom();
+        if (!room) room = rooms.find((r) => r.capacity > 0);
+
+        if (room && room.capacity >= group.length) {
+          const chunk = group.splice(0, group.length);
+          chunk.forEach((p) => (p.room = room!.name));
+          room.occupants.push(...chunk as never[]);
+          room.capacity -= chunk.length;
+        }
+
+        // If no room is large enough, we must split them
+        while (group.length > 0) {
+          const anyRoomWithSpace = rooms.find((r) => r.capacity > 0);
+          if (!anyRoomWithSpace) {
+            group.forEach((p) => (p.room = "Waiting List"));
+            group.length = 0;
+            break;
+          }
+          const chunk = group.splice(
+            0,
+            Math.min(group.length, anyRoomWithSpace.capacity),
+          );
+          chunk.forEach((p) => (p.room = anyRoomWithSpace.name));
+          anyRoomWithSpace.occupants.push(...chunk as never[]);
+          anyRoomWithSpace.capacity -= chunk.length;
+        }
+      }
+
+      // Safety net
+      normalPeople.forEach((p) => {
+        if (!p.room) p.room = "Waiting List";
+      });
+    };
+
+    assignRooms(males, MALE_ROOMS);
+    assignRooms(females, FEMALE_ROOMS);
 
     others.forEach((p) => {
       p.room = (p.sD as any)[`p${p.i}_room_override`] || "X";

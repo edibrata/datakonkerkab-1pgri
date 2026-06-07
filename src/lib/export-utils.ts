@@ -174,14 +174,36 @@ export const executeRoomSortedPDF = async (
     );
   });
 
-  const rows = data.map((r, i) => [
-    i + 1,
-    r.room,
-    r.branch,
-    r.name,
-    r.jk === "LAKI-LAKI" ? "L" : "P",
-    r.wa,
-  ]);
+  const roomCounts: Record<string, number> = {};
+  data.forEach((r) => {
+    roomCounts[r.room] = (roomCounts[r.room] || 0) + 1;
+  });
+
+  const rows: any[] = [];
+  const roomSeen = new Set<string>();
+
+  data.forEach((r, i) => {
+    const isFirst = !roomSeen.has(r.room);
+    if (isFirst) roomSeen.add(r.room);
+
+    const row: any[] = [i + 1];
+
+    if (isFirst) {
+      row.push({
+        content: r.room,
+        rowSpan: roomCounts[r.room],
+        styles: {
+          valign: "middle",
+          halign: "center",
+          fontStyle: "bold",
+          textColor: [185, 28, 28],
+        },
+      });
+    }
+
+    row.push(r.branch, r.name, r.jk === "LAKI-LAKI" ? "L" : "P", r.wa);
+    rows.push(row);
+  });
 
   const startYAfterKop = await drawKopSurat(doc);
 
@@ -189,12 +211,12 @@ export const executeRoomSortedPDF = async (
     startY: startYAfterKop + 15,
     head: [["No", "Kamar", "Entitas", "Nama Lengkap", "JK", "WhatsApp"]],
     body: rows,
-    theme: "striped",
+    theme: "grid",
     showHead: "everyPage",
     headStyles: { fillColor: [185, 28, 28], fontSize: 9, halign: "center" },
-    styles: { fontSize: 8, cellPadding: 3 },
+    styles: { fontSize: 8, cellPadding: 3, textColor: [0, 0, 0] },
     columnStyles: {
-      0: { halign: "center", cellWidth: 10 },
+      0: { halign: "center", cellWidth: 12 },
       1: {
         halign: "center",
         fontStyle: "bold",
