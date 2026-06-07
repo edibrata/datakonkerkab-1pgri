@@ -75,7 +75,7 @@ export const executeRoomMappingPDF = async (
     headStyles: { fillColor: [185, 28, 28], fontSize: 9, halign: "center" },
     styles: { fontSize: 8, cellPadding: 3 },
     columnStyles: {
-      0: { halign: "center", cellWidth: 10 },
+      0: { halign: "center", cellWidth: 14 },
       3: { halign: "center", cellWidth: 10 },
       5: {
         halign: "center",

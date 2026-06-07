@@ -431,8 +431,9 @@ export function AdminTab({
       <div className="max-w-md mx-auto py-10">
         <div className="bg-white p-8 rounded border shadow-lg text-center">
           <img
-            src="https://raw.githubusercontent.com/edibrata/image/main/Logo%20PGRI%20Official%20Full.png"
+            src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
             alt="Logo"
+            referrerPolicy="no-referrer"
             className="h-16 w-auto mx-auto mb-6"
           />
           <h2 className="text-xl font-bold mb-6 uppercase">

@@ -14,8 +14,9 @@ export function Navigation({ activeTab, onTabChange }: Props) {
           onClick={() => onTabChange("beranda")}
         >
           <img
-            src="https://raw.githubusercontent.com/edibrata/image/main/Logo%20PGRI%20Official%20Full.png"
+            src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
             alt="Logo PGRI"
+            referrerPolicy="no-referrer"
             className="h-8 md:h-10 w-auto"
           />
           <div className="flex flex-col">
