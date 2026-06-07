@@ -318,13 +318,15 @@ export const executeSidangKomisiPDF = async (
       headStyles: { fillColor: [185, 28, 28], fontSize: 10, halign: "center" },
       styles: { fontSize: 9, cellPadding: 2 },
       columnStyles: { 0: { halign: "center", cellWidth: 14 } },
-      didDrawPage: () => {
-        doc.setFontSize(16);
-        doc.setTextColor(185, 28, 28);
-        doc.setFont("helvetica", "bold");
-        doc.text(`PESERTA SIDANG ${kom}`, 105, startYAfterKop + 8, {
-          align: "center",
-        });
+      didDrawPage: (d: any) => {
+        if (d.pageNumber === 1) {
+          doc.setFontSize(16);
+          doc.setTextColor(185, 28, 28);
+          doc.setFont("helvetica", "bold");
+          doc.text(`PESERTA SIDANG ${kom}`, 105, startYAfterKop + 8, {
+            align: "center",
+          });
+        }
       },
     });
     pageRanges.push({
@@ -402,13 +404,15 @@ export const executeAttendancePDF = async (
           doc.text(text, x, y);
         }
       },
-      didDrawPage: () => {
-        doc.setFontSize(16);
-        doc.setTextColor(185, 28, 28);
-        doc.setFont("helvetica", "bold");
-        doc.text(`DAFTAR HADIR SIDANG ${kom}`, 105, startYAfterKop + 8, {
-          align: "center",
-        });
+      didDrawPage: (d: any) => {
+        if (d.pageNumber === 1) {
+          doc.setFontSize(16);
+          doc.setTextColor(185, 28, 28);
+          doc.setFont("helvetica", "bold");
+          doc.text(`DAFTAR HADIR SIDANG ${kom}`, 105, startYAfterKop + 8, {
+            align: "center",
+          });
+        }
       },
     });
     pageRanges.push({
