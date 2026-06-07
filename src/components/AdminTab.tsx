@@ -114,7 +114,22 @@ export function AdminTab({
   };
 
   const flattenedRows = useMemo(() => {
-    return getFlattenedRows(submissions, search, filter, sortConfig);
+    let rows = getFlattenedRows(submissions, sortConfig);
+    
+    if (filter) {
+        rows = rows.filter(r => r.kategori === filter);
+    }
+    
+    if (search) {
+        const s = search.toLowerCase();
+        rows = rows.filter(r => 
+           r.name.toLowerCase().includes(s) || 
+           r.branch.toLowerCase().includes(s) || 
+           r.kategori.toLowerCase().includes(s)
+        );
+    }
+    
+    return rows;
   }, [submissions, search, filter, sortConfig]);
 
   const isAllVisibleSelected =

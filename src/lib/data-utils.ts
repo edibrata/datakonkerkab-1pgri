@@ -12,8 +12,6 @@ export const FEMALE_ROOMS = [
 
 export function getFlattenedRows(
   submissions: SubmissionData[],
-  search: string = "",
-  filter: string = "",
   sortConfig: { key: string; dir: number } = { key: "ts", dir: -1 }
 ): FlatAdminRow[] {
   let allPeserta: FlatAdminRow[] = [];
@@ -24,17 +22,19 @@ export function getFlattenedRows(
       sub.kategori && sub.kategori.toUpperCase().includes("PESERTA")
         ? "PESERTA CABANG"
         : sub.kategori || "";
-    for (let i = 1; i <= 4; i++) {
-      const nm = (sub as any)[`p${i}_nama`] || "";
+        
+    // Support both new flattened format (p1_nama) and old nested array format (peserta)
+    const list = Array.isArray((sub as any).peserta)
+        ? (sub as any).peserta
+        : (((sub as any).peserta || {}) as any).peserta || [];
+        
+    const getField = (i: number, field: string) => {
+        return (sub as any)[`p${i}_${field}`] || (list[i-1] ? list[i-1][field] : "") || "";
+    };
+
+    for (let i = 1; i <= Math.max(4, list.length || 4); i++) {
+      const nm = getField(i, "nama");
       if (!nm) continue;
-      if (filter && normalizedKat !== filter) continue;
-      if (
-        search &&
-        ![sub.nama_cabang, nm, sub.kategori].some((x) =>
-          x?.toLowerCase().includes(search.toLowerCase()),
-        )
-      )
-        continue;
 
       const pData: FlatAdminRow = {
         id: sub.id!,
@@ -46,11 +46,11 @@ export function getFlattenedRows(
             : sub.nama_cabang || "TANPA CABANG"
         ).trim().toUpperCase(),
         name: nm,
-        jabatan: (sub as any)[`p${i}_jabatan`] || "-",
-        jk: ((sub as any)[`p${i}_jk`] || "LAKI-LAKI").trim().toUpperCase(),
-        foto: (sub as any)[`p${i}_foto`],
-        wa: (sub as any)[`p${i}_wa`] || "-",
-        kom: (sub as any)[`p${i}_komisi`] || "-",
+        jabatan: getField(i, "jabatan") || "-",
+        jk: (getField(i, "jk") || "LAKI-LAKI").trim().toUpperCase(),
+        foto: getField(i, "foto"),
+        wa: getField(i, "wa") || "-",
+        kom: getField(i, "komisi") || "-",
         token: sub.revision_token || "-",
         ts: sub.waktu_simpan || "-",
         kategori: normalizedKat,
