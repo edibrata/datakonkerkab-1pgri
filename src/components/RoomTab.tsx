@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { SubmissionData, FlatAdminRow } from "../types";
 import { getFlattenedRows } from "../lib/data-utils";
 import { Search, MapPin, Phone, Users, ShieldAlert, BadgeInfo, Building2, Layers } from "lucide-react";
 import { formatWA } from "../lib/pdf-utils";
+import { motion, AnimatePresence } from "motion/react";
 
 interface Props {
   submissions: SubmissionData[];
@@ -30,7 +31,7 @@ export function RoomTab({ submissions }: Props) {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   // Auto select if only one result
-  useMemo(() => {
+  useEffect(() => {
     if (search.length > 2 && flattenedRows.length === 1) {
       setSelectedPerson(flattenedRows[0]);
     }
@@ -62,20 +63,21 @@ export function RoomTab({ submissions }: Props) {
   const PhotoAvatar = ({ photoStr, name, sizeClass = "w-16 h-16", roundedClass = "rounded-full" }: { photoStr: string | undefined, name: string, sizeClass?: string, roundedClass?: string }) => {
     return (
       <div 
-        className={`${sizeClass} ${roundedClass} overflow-hidden border border-slate-200 shadow-sm cursor-pointer hover:border-red-400 hover:shadow-md hover:scale-105 transition-all duration-300 flex-shrink-0 bg-slate-50 flex items-center justify-center relative group`}
+        className={`${sizeClass} ${roundedClass} overflow-hidden border border-slate-200/80 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow transition-all duration-300 flex-shrink-0 bg-slate-50 flex items-center justify-center relative group`}
         onClick={(e) => {
           e.stopPropagation();
           if (photoStr) setPreviewPhoto(photoStr);
         }}
       >
         {photoStr ? (
-          <img src={photoStr} alt={name} className="w-full h-full object-cover" />
+          <img 
+            src={photoStr} 
+            alt={name} 
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-115" 
+          />
         ) : (
           generateInitialPhoto(name)
         )}
-        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Search className="text-white w-4 h-4" />
-        </div>
       </div>
     );
   };
@@ -90,26 +92,20 @@ export function RoomTab({ submissions }: Props) {
   return (
     <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 animate-in fade-in pb-12">
       {!selectedPerson ? (
-        <div className="bg-white p-6 md:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative overflow-hidden">
+        <div className="bg-white p-6 md:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative">
           
-          <div className="relative z-10 text-center mb-8 md:mb-10">
-            <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-slate-50 border border-slate-100 text-slate-700 mb-4 md:mb-6 shadow-sm">
-              <Search className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
-            <h2 className="text-2xl md:text-4xl font-black text-slate-900 mb-3 tracking-tight">Pencarian Profil Peserta</h2>
-            <p className="text-sm md:text-base text-slate-500 font-medium max-w-lg mx-auto leading-relaxed px-4 md:px-0">
-              Ketik nama lengkap atau cabang untuk melihat detail kepesertaan, alokasi kamar, dan rekan sekamar.
-            </p>
+          <div className="relative z-10 text-center mb-6 md:mb-8">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Sistem Informasi Peserta</h2>
           </div>
           
           <div className="relative mb-2 max-w-xl mx-auto group z-20">
-            <div className="absolute inset-y-0 left-0 pl-4 md:pl-6 flex items-center pointer-events-none transition-colors z-10">
-              <Search className="h-5 w-5 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
+            <div className="absolute inset-y-0 left-0 pl-4 md:pl-5 flex items-center pointer-events-none transition-colors z-10">
+              <Search className="h-4 w-4 md:h-5 md:w-5 text-slate-400 group-focus-within:text-slate-500 transition-colors" />
             </div>
             <input
               type="text"
-              className="block w-full pl-12 md:pl-14 pr-6 py-3.5 md:py-4 rounded-xl md:rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-400 text-sm md:text-base transition-all placeholder:text-slate-400 text-slate-800 outline-none shadow-sm relative z-10"
-              placeholder="Ketik nama untuk mencari profil..."
+              className="block w-full pl-10 md:pl-12 pr-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:ring-4 focus:ring-slate-100 focus:border-slate-400 text-xs md:text-sm transition-all placeholder:text-slate-400 text-slate-800 outline-none shadow-sm relative z-10"
+              placeholder="Ketik nama lengkap atau cabang..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -121,48 +117,55 @@ export function RoomTab({ submissions }: Props) {
 
             {/* Dropdown Suggestions */}
             {search.length > 0 && showSuggestions && (
-              <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-100 shadow-[0_10px_40px_rgb(0,0,0,0.08)] rounded-2xl overflow-hidden max-h-[360px] overflow-y-auto custom-scrollbar opacity-100 transition-all z-50">
+              <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-100 shadow-[0_10px_40px_rgb(0,0,0,0.08)] rounded-2xl overflow-hidden max-h-[380px] overflow-y-auto custom-scrollbar opacity-100 transition-all z-50">
                 {flattenedRows.length > 0 ? (
                   <div className="p-2 space-y-1">
-                  {flattenedRows.slice(0, 10).map((r, idx) => (
-                    <div 
-                      key={idx}
-                      onClick={(e) => {
-                         e.preventDefault();
-                         e.stopPropagation();
-                         setSelectedPerson(r);
-                         setShowSuggestions(false);
-                      }}
-                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors"
-                    >
-                      <PhotoAvatar photoStr={r.foto} name={r.name} sizeClass="w-10 h-10 md:w-12 md:h-12 ring-1 ring-slate-100" />
-                      <div className="flex-1 min-w-0">
-                         <div className="flex items-center justify-between gap-2 mb-1">
-                            <p className="font-bold text-slate-900 text-sm md:text-base truncate">{r.name}</p>
-                            {r.kom && r.kom !== "-" && (
-                               <span className="inline-flex items-center text-[9px] font-bold uppercase text-slate-600 bg-slate-100 px-2 py-0.5 rounded tracking-wider border border-slate-200 flex-shrink-0">
-                                {r.kom}
-                              </span>
-                            )}
-                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center text-xs font-medium text-slate-500">
-                              <MapPin className="w-3 h-3 mr-1 text-slate-400 flex-shrink-0" />
-                              <span className="truncate">{r.branch}</span>
-                            </div>
-                            <div className="flex items-center text-xs font-medium text-slate-400 border-l border-slate-200 pl-3">
-                              <span className="truncate uppercase text-[9px] tracking-wider font-bold mr-1.5">Kamar:</span> 
-                              <span className="font-bold text-slate-700">{r.room || "-"}</span>
-                            </div>
+                    <div className="px-3 py-1.5 border-b border-slate-50 mb-1 flex items-center justify-between">
+                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Delegasi Ditemukan</span>
+                       <span className="text-[9px] font-extrabold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full">{Math.min(10, flattenedRows.length)} / {flattenedRows.length}</span>
+                    </div>
+                    {flattenedRows.slice(0, 10).map((r, idx) => (
+                      <div 
+                        key={idx}
+                        onMouseDown={(e) => {
+                           e.preventDefault(); // Prevents input blur race condition on mobile
+                        }}
+                        onClick={() => {
+                           setSelectedPerson(r);
+                           setShowSuggestions(false);
+                        }}
+                        className="flex items-center gap-3 md:gap-4 p-2.5 rounded-xl hover:bg-slate-50/70 border border-transparent hover:border-slate-100/50 cursor-pointer transition-all duration-200"
+                      >
+                        <PhotoAvatar photoStr={r.foto} name={r.name} sizeClass="w-10 h-10 md:w-11 md:h-11 ring-1 ring-slate-100" />
+                        <div className="flex-1 min-w-0">
+                           <div className="flex items-center justify-between gap-2 pb-1 border-b border-dashed border-slate-100 mb-1">
+                              <p className="font-bold text-slate-800 text-xs md:text-sm truncate leading-tight">{r.name}</p>
+                              {r.kom && r.kom !== "-" && (
+                                 <span className="inline-flex items-center text-[8px] md:text-[9px] font-extrabold uppercase text-indigo-600 bg-indigo-50 border border-indigo-100/30 px-1.5 py-0.5 rounded flex-shrink-0">
+                                  {r.kom}
+                                 </span>
+                              )}
+                           </div>
+                           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                             <div className="flex items-center text-[10px] md:text-xs font-semibold text-slate-500">
+                               <MapPin className="w-3 h-3 mr-0.5 text-slate-400 flex-shrink-0" />
+                               <span className="truncate max-w-[120px] md:max-w-[160px] uppercase tracking-wide">{r.branch}</span>
+                             </div>
+                             {r.room && r.room !== "-" && r.room !== "X" && (
+                               <div className="flex items-center text-[9px] md:text-[10px] font-semibold text-slate-500 bg-blue-50/30 border border-blue-50 px-1.5 py-0.5 rounded-md">
+                                 <span className="uppercase text-[8px] tracking-wider font-extrabold text-blue-400/90 mr-1.5 flex-shrink-0">KAMAR</span> 
+                                 <span className="font-bold text-blue-600">{r.room}</span>
+                               </div>
+                             )}
+                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  {flattenedRows.length > 10 && (
-                    <div className="p-3 text-center text-xs font-bold text-slate-400 bg-slate-50/50 rounded-lg mt-1">
-                      Menampilkan 10 dari {flattenedRows.length} hasil. Ketik lebih spesifik...
-                    </div>
-                  )}
+                    ))}
+                    {flattenedRows.length > 10 && (
+                      <div className="p-3 text-center text-[10px] font-semibold text-slate-400 bg-slate-50/50 rounded-xl mt-1.5">
+                        Menampilkan 10 dari {flattenedRows.length} hasil. Ketik lebih spesifik...
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12 px-4">
@@ -173,10 +176,10 @@ export function RoomTab({ submissions }: Props) {
               </div>
             )}
           </div>
-          
-          <div className="mt-8 md:mt-10 text-center bg-blue-50/50 rounded-2xl p-5 md:p-6 border border-blue-100 max-w-xl mx-auto">
-             <BadgeInfo className="w-5 h-5 md:w-6 md:h-6 text-blue-400 mx-auto mb-2.5" />
-             <p className="text-xs md:text-sm text-blue-800 font-medium px-2">
+
+          <div className="mt-6 bg-blue-50/20 rounded-2xl p-3.5 border border-blue-50/60 max-w-md mx-auto flex items-start gap-3">
+             <BadgeInfo className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+             <p className="text-[10.5px] md:text-[11px] text-left leading-relaxed text-blue-600 font-medium fallback-sans">
                 Pencarian profil ini memudahkan Anda untuk menemukan rekan delegasi, alokasi penginapan, serta melihat susunan teman sekamar yang telah diatur oleh panitia.
              </p>
           </div>
@@ -227,23 +230,13 @@ export function RoomTab({ submissions }: Props) {
                   )}
                 </div>
                 
-                {/* Pills Container */}
-                <div className="flex flex-wrap gap-1.5 md:gap-2 justify-start">
-                   {selectedPerson.kategori && (
-                      <div className="border border-slate-200 bg-white shadow-sm rounded-lg md:rounded-[0.5rem] px-2.5 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs font-bold text-slate-700 whitespace-nowrap">
-                        {selectedPerson.kategori}
-                      </div>
-                   )}
-                   {selectedPerson.jabatan && selectedPerson.jabatan !== "-" && (
-                      <div className="border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg md:rounded-[0.5rem] px-2.5 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs font-bold whitespace-nowrap">
-                        Jabatan: {selectedPerson.jabatan}
-                      </div>
-                   )}
+                {/* Contact Action */}
+                <div className="flex justify-start">
                    <a href={getWaLink(selectedPerson.wa, false)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 border border-[#25D366]/30 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1da851] rounded-lg md:rounded-[0.5rem] px-2.5 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs font-bold transition-colors whitespace-nowrap">
                       <svg className="w-3 h-3 md:w-3.5 md:h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
                       Hubungi
-                   </a>
-                </div>
+                    </a>
+                 </div>
               </div>
             </div>
             
@@ -291,22 +284,41 @@ export function RoomTab({ submissions }: Props) {
       )}
 
       {/* Image Modal Full Screen */}
-      {previewPhoto && (
-        <div 
-          className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setPreviewPhoto(null)}
-        >
-          <div className="relative max-w-2xl w-full" onClick={e => e.stopPropagation()}>
-            <img src={previewPhoto} alt="Preview" className="w-full h-auto max-h-[85vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/20" />
-            <button 
-              className="absolute -top-12 right-0 md:-right-12 w-10 h-10 bg-white/10 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-colors border border-white/20"
-              onClick={() => setPreviewPhoto(null)}
+      <AnimatePresence>
+        {previewPhoto && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setPreviewPhoto(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="relative max-w-xl w-full" 
+              onClick={e => e.stopPropagation()}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-          </div>
-        </div>
-      )}
+              <img 
+                src={previewPhoto} 
+                alt="Preview" 
+                className="w-full h-auto max-h-[80vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10" 
+              />
+              <button 
+                className="absolute -top-12 right-2 md:-right-12 w-10 h-10 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-full flex items-center justify-center transition-all border border-white/10 shadow-lg cursor-pointer"
+                onClick={() => setPreviewPhoto(null)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
