@@ -137,13 +137,14 @@ export function AdminTab({
           id: sub.id!,
           sD: sub,
           i,
-          branch:
+          branch: (
             normalizedKat === "PENINJAU"
               ? (sub.nama_cabang || "").replace("PENINJAU - ", "")
-              : sub.nama_cabang || "TANPA CABANG",
+              : sub.nama_cabang || "TANPA CABANG"
+          ).trim().toUpperCase(),
           name: nm,
           jabatan: (sub as any)[`p${i}_jabatan`] || "-",
-          jk: (sub as any)[`p${i}_jk`] || "LAKI-LAKI",
+          jk: ((sub as any)[`p${i}_jk`] || "LAKI-LAKI").trim().toUpperCase(),
           foto: (sub as any)[`p${i}_foto`],
           wa: (sub as any)[`p${i}_wa`] || "-",
           kom: (sub as any)[`p${i}_komisi`] || "-",
@@ -158,46 +159,51 @@ export function AdminTab({
       }
     });
 
-    // Room Logic Peserta Cabang (Pooling Gender)
-    const males = allPeserta
+    const allPeopleForRooms = [...allPeserta, ...others];
+
+    // Room Logic (Pooling Gender)
+    const males = allPeopleForRooms
       .filter((p) => p.jk === "LAKI-LAKI")
       .sort((a, b) => a.branch.localeCompare(b.branch));
-    const females = allPeserta
+    const females = allPeopleForRooms
       .filter((p) => p.jk === "PEREMPUAN")
+      .sort((a, b) => a.branch.localeCompare(b.branch));
+    const realOthers = allPeopleForRooms
+      .filter((p) => p.jk !== "LAKI-LAKI" && p.jk !== "PEREMPUAN")
       .sort((a, b) => a.branch.localeCompare(b.branch));
 
     const FEMALE_ROOMS = [
-      "ALPHA GANJIL-1",
-      "ALPHA GANJIL-3",
-      "ALPHA GANJIL-5",
-      "ALPHA GANJIL-7",
-      "ALPHA GANJIL-9",
-      "ALPHA GANJIL-11",
-      "ALPHA GANJIL-15",
+      "ALPHA-1",
+      "ALPHA-3",
+      "ALPHA-5",
+      "ALPHA-7",
+      "ALPHA-9",
+      "ALPHA-11",
+      "ALPHA-15",
     ];
 
     const MALE_ROOMS = [
-      "ALPHA GANJIL-17",
-      "ALPHA GANJIL-19",
-      "ALPHA GANJIL-21",
-      "ALPHA GANJIL-23",
-      "ALPHA GANJIL-25",
-      "ALPHA GANJIL-27",
-      "ALPHA GANJIL-29",
-      "ALPHA GANJIL-31",
-      "ALPHA GANJIL-33",
-      "ALPHA GENAP-8",
-      "ALPHA GENAP-10",
-      "ALPHA GENAP-12",
-      "ALPHA GENAP-14",
-      "ALPHA GENAP-16",
-      "ALPHA GENAP-18",
-      "ALPHA GENAP-20",
-      "ALPHA GENAP-22",
-      "ALPHA GENAP-24",
-      "ALPHA GENAP-26",
-      "ALPHA GENAP-28",
-      "ALPHA GENAP-30",
+      "ALPHA-17",
+      "ALPHA-19",
+      "ALPHA-21",
+      "ALPHA-23",
+      "ALPHA-25",
+      "ALPHA-27",
+      "ALPHA-29",
+      "ALPHA-31",
+      "ALPHA-33",
+      "ALPHA-8",
+      "ALPHA-10",
+      "ALPHA-12",
+      "ALPHA-14",
+      "ALPHA-16",
+      "ALPHA-18",
+      "ALPHA-20",
+      "ALPHA-22",
+      "ALPHA-24",
+      "ALPHA-26",
+      "ALPHA-28",
+      "ALPHA-30",
       "SUPERIOR-14",
       "SUPERIOR-16",
       "SUPERIOR-18",
@@ -242,7 +248,25 @@ export function AdminTab({
         byBranch[p.branch].push(p);
       }
 
-      const groups = Object.values(byBranch).sort(
+      const remainders: FlatAdminRow[][] = [];
+
+      // 1. Give full rooms to branches with >= 4 people
+      for (const branch of Object.keys(byBranch).sort()) {
+        const group = byBranch[branch];
+        while (group.length >= 4) {
+          const room = getEmptyRoom();
+          if (!room) break; // Out of empty rooms
+          const chunk = group.splice(0, 4);
+          chunk.forEach((p) => (p.room = room.name));
+          room.occupants.push(...(chunk as never[]));
+          room.capacity -= 4;
+        }
+        if (group.length > 0) {
+          remainders.push(group);
+        }
+      }
+
+      const groups = remainders.sort(
         (a, b) => b.length - a.length || a[0].branch.localeCompare(b[0].branch),
       );
 
@@ -292,11 +316,11 @@ export function AdminTab({
     assignRooms(males, MALE_ROOMS);
     assignRooms(females, FEMALE_ROOMS);
 
-    others.forEach((p) => {
+    realOthers.forEach((p) => {
       p.room = (p.sD as any)[`p${p.i}_room_override`] || "X";
     });
 
-    const rows = [...allPeserta, ...others];
+    const rows = [...males, ...females, ...realOthers];
 
     rows.sort((a, b) => {
       const key = sortConfig.key as keyof FlatAdminRow | "kaos" | "idx";
