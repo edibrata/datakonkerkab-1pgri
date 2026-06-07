@@ -4,6 +4,7 @@ import { Navigation } from "./components/Navigation";
 import { HomeTab } from "./components/HomeTab";
 import { FormTab } from "./components/FormTab";
 import { AdminTab } from "./components/AdminTab";
+import { SubmissionData } from "./types";
 
 export default function App() {
   const { submissions, isRegistrationOpen, loading } = useFirebaseData();
@@ -22,6 +23,8 @@ export default function App() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [editSubmissionData, setEditSubmissionData] = useState<SubmissionData | null>(null);
+  const [editStartStep, setEditStartStep] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -92,9 +95,19 @@ export default function App() {
                 submissions={submissions}
                 isRegistrationOpen={isRegistrationOpen}
                 initialCategory={selectedCategory}
+                editData={editSubmissionData}
+                startStep={editStartStep}
                 showModal={showModal}
-                onSaveSuccess={() => setActiveTab("beranda")}
-                onCancel={() => setActiveTab("beranda")}
+                onSaveSuccess={() => {
+                  setActiveTab(editSubmissionData ? "data" : "beranda");
+                  setEditSubmissionData(null);
+                  setEditStartStep(undefined);
+                }}
+                onCancel={() => {
+                  setActiveTab(editSubmissionData ? "data" : "beranda");
+                  setEditSubmissionData(null);
+                  setEditStartStep(undefined);
+                }}
                 onChangeCategory={() => setShowCategoryModal(true)}
               />
             )}
@@ -105,12 +118,18 @@ export default function App() {
                 showModal={showModal}
                 setModalProgress={setModalProgress}
                 onViewPrevew={setPreviewImage}
-                onEditEntry={(id: string) => {
-                  // To properly implement onEditEntry from admin table
-                  // we would pass it down, but the user HTML says standard "Revisi Token" flow is typically used.
-                  // However, we just switch to form mode for simplicity or show token popup.
-                  // I will just switch to form tab.
-                  setActiveTab("formulir");
+                onEditEntry={(id: string, participantIndex?: number) => {
+                  const dataToEdit = submissions.find((s) => s.id === id);
+                  if (dataToEdit) {
+                    setEditSubmissionData(dataToEdit);
+                    setSelectedCategory(dataToEdit.kategori || "");
+                    if (participantIndex) {
+                      setEditStartStep(participantIndex + 1);
+                    } else {
+                      setEditStartStep(undefined);
+                    }
+                    setActiveTab("formulir");
+                  }
                 }}
               />
             )}

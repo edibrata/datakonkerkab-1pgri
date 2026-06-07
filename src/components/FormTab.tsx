@@ -17,12 +17,16 @@ interface Props {
   onSaveSuccess: () => void;
   onCancel: () => void;
   onChangeCategory: () => void;
+  editData?: SubmissionData | null;
+  startStep?: number;
 }
 
 export function FormTab({
   submissions,
   isRegistrationOpen,
   initialCategory,
+  editData,
+  startStep,
   showModal,
   onSaveSuccess,
   onCancel,
@@ -43,10 +47,15 @@ export function FormTab({
     useState<SubmissionData | null>(null);
 
   useEffect(() => {
-    if (initialCategory && !formData.kategori) {
+    if (editData) {
+      setIsRevisionMode(true);
+      setEditingDocId(editData.id || null);
+      setFormData({ ...editData });
+      setCurrentStep(startStep || 2); // Go directly to the specified step or data entry step
+    } else if (initialCategory && !formData.kategori) {
       setFormData((prev) => ({ ...prev, kategori: initialCategory }));
     }
-  }, [initialCategory]);
+  }, [editData, startStep, initialCategory]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -859,7 +868,7 @@ export function FormTab({
               )}
             </div>
             <div className="flex gap-1 md:gap-2">
-              {!isPeserta && currentStep === 2 && (
+              {!isPeserta && currentStep === 2 && !editingDocId && (
                 <button
                   type="button"
                   onClick={saveAndAddNext}
