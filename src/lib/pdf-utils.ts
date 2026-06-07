@@ -98,7 +98,7 @@ export const drawSingleCard = async (
           ctx.textAlign = "center";
           ctx.fillStyle = "#111111";
           ctx.textBaseline = "middle";
-          const maxNW = 920,
+          const maxNW = 800,
             maxNH = 120;
           let nSize = 80;
           ctx.font = `bold ${nSize}px "Times New Roman", Times, serif`;
@@ -111,7 +111,7 @@ export const drawSingleCard = async (
           }
           ctx.fillText(nm, 620, 1598);
           const displayInfo = (info || "").toUpperCase();
-          const maxIW = 920,
+          const maxIW = 800,
             maxIH = 150;
           let iSize = 75;
           ctx.font = `bold ${iSize}px "Times New Roman", Times, serif`;

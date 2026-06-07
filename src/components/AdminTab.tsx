@@ -61,6 +61,8 @@ export function AdminTab({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showExportModal, setShowExportModal] = useState(false);
   const [activeRowActions, setActiveRowActions] = useState<string | null>(null);
+  const [editingRecord, setEditingRecord] = useState<{ id: string; i: number; data: any } | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -307,6 +309,30 @@ export function AdminTab({
       doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar", id),
       { [`p${idx}_room_override`]: updateVal },
     );
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRecord) return;
+    try {
+      showModal("MENYIMPAN", "Menyimpan perubahan data...", "success");
+      const ref = doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar", editingRecord.id);
+      
+      const updateData: any = {};
+      const { i } = editingRecord;
+      
+      updateData[`p${i}_nama`] = editForm.nama;
+      updateData[`p${i}_jabatan`] = editForm.jabatan;
+      updateData[`p${i}_jk`] = editForm.jk;
+      updateData[`p${i}_komisi`] = editForm.komisi;
+      updateData[`p${i}_wa`] = editForm.wa;
+      updateData[`p${i}_kaos`] = editForm.kaos;
+      
+      await updateDoc(ref, updateData);
+      setEditingRecord(null);
+      showModal("BERHASIL", "Data berhasil diperbarui.", "success");
+    } catch (e: any) {
+      showModal("ERROR", "Gagal mengupdate data: " + e.message, "error");
+    }
   };
 
   const resetToken = async (id: string) => {
@@ -874,7 +900,21 @@ export function AdminTab({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onEditEntry(r.id);
+                            // If this is a PESERTA CABANG record, we edit the specific participant
+                            // If it's another type, we edit the whole submission. For simplicity,
+                            // we will edit the specific participant fields in this row.
+                            setEditingRecord({ id: r.id, i: r.i, data: r.sD });
+                            setEditForm({
+                              kategori: r.sD.kategori,
+                              nama_cabang: r.sD.nama_cabang,
+                              nama: (r.sD as any)[`p${r.i}_nama`] || "",
+                              jabatan: (r.sD as any)[`p${r.i}_jabatan`] || "",
+                              jk: (r.sD as any)[`p${r.i}_jk`] || "",
+                              komisi: (r.sD as any)[`p${r.i}_komisi`] || "",
+                              wa: (r.sD as any)[`p${r.i}_wa`] || "",
+                              kaos: (r.sD as any)[`p${r.i}_kaos`] || "",
+                            });
+                            setActiveRowActions(null);
                           }}
                           className="p-2 bg-blue-50 text-blue-600 rounded-full border border-blue-100 transition-all hover:scale-110 tooltip-container cursor-pointer"
                         >
@@ -1301,6 +1341,124 @@ export function AdminTab({
                   </svg>
                 </div>
                 <span className="tooltip-text">Daftar Hadir Pleno</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Data Modal */}
+      {editingRecord && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 z-[60]">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 shrink-0 flex items-center justify-between text-white">
+              <h3 className="font-black text-lg">EDIT DATA PESERTA</h3>
+              <button
+                onClick={() => setEditingRecord(null)}
+                className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                title="Batal"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase">Nama Peserta</label>
+                  <input 
+                    type="text" 
+                    value={editForm.nama} 
+                    onChange={(e) => setEditForm({ ...editForm, nama: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm font-bold text-slate-800 uppercase focus:border-blue-500 focus:outline-none"
+                    placeholder="Nama Lengkap"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase">Jabatan</label>
+                  <input 
+                    type="text" 
+                    value={editForm.jabatan} 
+                    onChange={(e) => setEditForm({ ...editForm, jabatan: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm font-bold text-slate-800 uppercase focus:border-blue-500 focus:outline-none"
+                    placeholder="Jabatan"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Jenis Kelamin</label>
+                    <select 
+                      value={editForm.jk} 
+                      onChange={(e) => setEditForm({ ...editForm, jk: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm font-bold text-slate-800 uppercase focus:border-blue-500 focus:outline-none bg-white"
+                    >
+                      <option value="">Pilih</option>
+                      <option value="L">L</option>
+                      <option value="P">P</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Ukuran Kaos</label>
+                    <select 
+                      value={editForm.kaos} 
+                      onChange={(e) => setEditForm({ ...editForm, kaos: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm font-bold text-slate-800 uppercase focus:border-blue-500 focus:outline-none bg-white"
+                    >
+                      <option value="">Pilih</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                      <option value="XXXL">XXXL</option>
+                      <option value="XXXXL">XXXXL</option>
+                      <option value="XXXXXL">XXXXXL</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Komisi</label>
+                    <select 
+                      value={editForm.komisi} 
+                      onChange={(e) => setEditForm({ ...editForm, komisi: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm font-bold text-slate-800 uppercase focus:border-blue-500 focus:outline-none bg-white"
+                    >
+                      <option value="">Pilih</option>
+                      <option value="A">KOMISI A</option>
+                      <option value="B">KOMISI B</option>
+                      <option value="C">KOMISI C</option>
+                      <option value="D">KOMISI D</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">No WhatsApp</label>
+                    <input 
+                      type="text" 
+                      value={editForm.wa} 
+                      onChange={(e) => setEditForm({ ...editForm, wa: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+                      placeholder="08..."
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingRecord(null)}
+                  className="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  className="px-6 py-2 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition-all active:scale-95"
+                >
+                  Simpan Data
+                </button>
               </div>
             </div>
           </div>
