@@ -165,18 +165,59 @@ export function AdminTab({
       .filter((p) => p.jk === "PEREMPUAN")
       .sort((a, b) => a.branch.localeCompare(b.branch));
 
-    let currentRoom = 1;
+    const FEMALE_ROOMS = [
+      "ALPHA GANJIL-1",
+      "ALPHA GANJIL-3",
+      "ALPHA GANJIL-5",
+      "ALPHA GANJIL-7",
+      "ALPHA GANJIL-9",
+      "ALPHA GANJIL-11",
+      "ALPHA GANJIL-15",
+    ];
+
+    const MALE_ROOMS = [
+      "ALPHA GANJIL-17",
+      "ALPHA GANJIL-19",
+      "ALPHA GANJIL-21",
+      "ALPHA GANJIL-23",
+      "ALPHA GANJIL-25",
+      "ALPHA GANJIL-27",
+      "ALPHA GANJIL-29",
+      "ALPHA GANJIL-31",
+      "ALPHA GANJIL-33",
+      "ALPHA GENAP-8",
+      "ALPHA GENAP-10",
+      "ALPHA GENAP-12",
+      "ALPHA GENAP-14",
+      "ALPHA GENAP-16",
+      "ALPHA GENAP-18",
+      "ALPHA GENAP-20",
+      "ALPHA GENAP-22",
+      "ALPHA GENAP-24",
+      "ALPHA GENAP-26",
+      "ALPHA GENAP-28",
+      "ALPHA GENAP-30",
+      "SUPERIOR-14",
+      "SUPERIOR-16",
+      "SUPERIOR-18",
+      "SUPERIOR-20",
+      "SUPERIOR-22",
+      "SUPERIOR-24",
+      "SUPERIOR-26",
+    ];
+
     males.forEach((p, idx) => {
+      const rmIdx = Math.floor(idx / 4);
       p.room =
         (p.sD as any)[`p${p.i}_room_override`] ||
-        Math.floor(idx / 4) + currentRoom;
+        (rmIdx < MALE_ROOMS.length ? MALE_ROOMS[rmIdx] : "Waiting List");
     });
-    if (males.length > 0) currentRoom += Math.ceil(males.length / 4);
 
     females.forEach((p, idx) => {
+      const rmIdx = Math.floor(idx / 4);
       p.room =
         (p.sD as any)[`p${p.i}_room_override`] ||
-        Math.floor(idx / 4) + currentRoom;
+        (rmIdx < FEMALE_ROOMS.length ? FEMALE_ROOMS[rmIdx] : "Waiting List");
     });
 
     others.forEach((p) => {
