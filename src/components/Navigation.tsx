@@ -1,4 +1,4 @@
-import { Home, ClipboardList, Database } from "lucide-react";
+import { Home, ClipboardList, Database, BedDouble } from "lucide-react";
 
 interface Props {
   activeTab: string;
@@ -46,6 +46,15 @@ export function Navigation({ activeTab, onTabChange }: Props) {
             <ClipboardList className="h-6 w-6" />
             <span className="tooltip-text" style={{ width: "auto" }}>
               Pendaftaran
+            </span>
+          </button>
+          <button
+            onClick={() => onTabChange("info_kamar")}
+            className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "info_kamar" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
+          >
+            <BedDouble className="h-6 w-6" />
+            <span className="tooltip-text" style={{ width: "auto" }}>
+              Info Kamar
             </span>
           </button>
           <button

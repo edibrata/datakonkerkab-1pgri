@@ -6,6 +6,8 @@ import { FormTab } from "./components/FormTab";
 import { AdminTab } from "./components/AdminTab";
 import { SubmissionData } from "./types";
 
+import { RoomTab } from "./components/RoomTab";
+
 export default function App() {
   const { submissions, isRegistrationOpen, loading } = useFirebaseData();
   const [activeTab, setActiveTab] = useState("beranda");
@@ -132,6 +134,9 @@ export default function App() {
                   }
                 }}
               />
+            )}
+            {activeTab === "info_kamar" && (
+              <RoomTab submissions={submissions} />
             )}
           </>
         )}
