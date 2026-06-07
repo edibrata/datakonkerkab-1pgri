@@ -12,7 +12,7 @@ export function RoomTab({ submissions }: Props) {
   const [search, setSearch] = useState("");
 
   const flattenedRows = useMemo(() => {
-    return getFlattenedRows(submissions, search, "All", { key: "name", dir: 1 });
+    return getFlattenedRows(submissions, search, "", { key: "name", dir: 1 });
   }, [submissions, search]);
 
   const [selectedPerson, setSelectedPerson] = useState<FlatAdminRow | null>(null);
@@ -27,7 +27,7 @@ export function RoomTab({ submissions }: Props) {
 
   const roommates = useMemo(() => {
     if (!selectedPerson || !selectedPerson.room || selectedPerson.room === "X" || selectedPerson.room === "Waiting List") return [];
-    const allRows = getFlattenedRows(submissions, "", "All", { key: "name", dir: 1 });
+    const allRows = getFlattenedRows(submissions, "", "", { key: "name", dir: 1 });
     return allRows.filter(
       (r) => r.room === selectedPerson.room && r.id + r.i !== selectedPerson.id + selectedPerson.i
     );
