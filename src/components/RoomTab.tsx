@@ -197,11 +197,13 @@ export function RoomTab({ submissions }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white p-6 md:p-12 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.03)] border border-slate-100 relative overflow-hidden"
+          className="bg-white p-6 md:p-12 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.03)] border border-slate-100 relative"
         >
-          {/* Decorative Elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/[0.02] rounded-full blur-3xl -ml-28 -mb-28 pointer-events-none" />
+          {/* Decorative Elements bounded in absolute wrapper */}
+          <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none z-0">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl -mr-24 -mt-24" />
+            <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/[0.02] rounded-full blur-3xl -ml-28 -mb-28" />
+          </div>
           
           <div className="relative z-10 text-center mb-6 md:mb-8">
             <div className="flex justify-center mb-4">
