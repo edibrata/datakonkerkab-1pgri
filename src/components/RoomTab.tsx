@@ -509,7 +509,9 @@ export function RoomTab({ submissions }: Props) {
                   {roommates.map((mate, idx) => (
                     <div 
                       key={idx} 
-                      className="bg-white rounded-2xl p-4 border border-slate-150 hover:border-slate-250 transition-all duration-350 shadow-[0_2px_6px_rgba(0,0,0,0.015)] flex items-center justify-between gap-3 group/mate cursor-default hover:shadow-md animate-fade-in"
+                      onClick={() => setSelectedPerson(mate)}
+                      className="bg-white rounded-2xl p-4 border border-slate-150 hover:border-red-400/[0.25] hover:bg-slate-50/[0.3] transition-all duration-300 shadow-[0_2px_6px_rgba(0,0,0,0.015)] flex items-center justify-between gap-3 group/mate cursor-pointer hover:shadow-md hover:-translate-y-1 active:scale-[0.98] animate-fade-in relative"
+                      title={`Klik untuk melihat detail ${mate.name}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <PhotoAvatar photoStr={mate.foto} name={mate.name} sizeClass="w-11 h-11" roundedClass="rounded-full shadow-sm ring-2 ring-white" />
@@ -534,6 +536,7 @@ export function RoomTab({ submissions }: Props) {
                           href={getWaLink(mate.wa, false)} 
                           target="_blank" 
                           rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
                           className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 hover:bg-emerald-50 border border-slate-150 hover:border-emerald-200 text-slate-500 hover:text-emerald-600 transition-all duration-300 hover:scale-110 shadow-sm cursor-pointer select-none"
                         >
                           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -542,7 +545,7 @@ export function RoomTab({ submissions }: Props) {
                         </a>
                         {/* Tooltip */}
                         <div className="absolute bottom-full right-0 mb-2 px-2.5 py-1 bg-slate-900 text-white text-[10px] font-black rounded-md opacity-0 pointer-events-none group-hover/tool:opacity-100 group-hover/tool:-translate-y-0.5 transition-all duration-200 shadow-md whitespace-nowrap z-50 select-none uppercase tracking-wide">
-                          Hubungi {mate.name}
+                          Hubungi {mate.name} via WhatsApp
                           <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-slate-900" />
                         </div>
                       </div>
