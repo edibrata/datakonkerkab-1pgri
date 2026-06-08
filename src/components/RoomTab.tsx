@@ -378,7 +378,7 @@ export function RoomTab({ submissions }: Props) {
                     className="h-6 w-auto object-contain filter grayscale opacity-80"
                   />
                   <div>
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] block leading-none mb-0.5">KARTU PESERTA RESMI</span>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] block leading-none mb-0.5">PROFIL PESERTA</span>
                     <span className="text-[10px] font-black text-red-650 tracking-wide uppercase leading-none">KONKERKAB 1 PGRI 2026</span>
                   </div>
                 </div>
