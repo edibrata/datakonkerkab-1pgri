@@ -204,7 +204,7 @@ export function RoomTab({ submissions }: Props) {
           <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/[0.02] rounded-full blur-3xl -ml-28 -mb-28 pointer-events-none" />
           
-          <div className="relative z-10 text-center mb-8 md:mb-10">
+          <div className="relative z-10 text-center mb-6 md:mb-8">
             <div className="flex justify-center mb-4">
               <img
                 src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
@@ -213,16 +213,10 @@ export function RoomTab({ submissions }: Props) {
                 className="h-16 md:h-20 w-auto object-contain drop-shadow-md select-none pointer-events-none"
               />
             </div>
-            <span className="text-[10px] md:text-[11px] font-black uppercase text-red-650 bg-red-50/80 px-3.5 py-1 rounded-full tracking-[0.1em] border border-red-100/30 inline-block mb-3">
-              Konkerkab 1 PGRI Kabupaten Pandeglang
-            </span>
             <h2 className="text-2xl md:text-3.5xl font-black text-slate-900 tracking-tight leading-tight">
               Sistem Informasi Peserta
             </h2>
             <div className="w-12 h-1 bg-red-650 mx-auto mt-4 rounded-full" />
-            <p className="text-xs text-slate-500 max-w-md mx-auto mt-3 font-medium leading-relaxed">
-              Cari data delegasi, cek alokasi penginapan dan nomor kamar, serta temukan rekan sekamar Anda dengan mudah dan cepat.
-            </p>
           </div>
           
           {/* Search Bar Container */}
@@ -338,14 +332,13 @@ export function RoomTab({ submissions }: Props) {
           </div>
 
           {/* Info Badge Container */}
-          <div className="mt-8 bg-gradient-to-r from-red-50/20 to-blue-50/10 rounded-2xl p-4 border border-slate-100 max-w-lg mx-auto flex items-start gap-3 text-left">
+          <div className="mt-6 bg-gradient-to-r from-red-50/25 to-blue-50/15 rounded-2xl p-4 border border-slate-100 max-w-lg mx-auto flex items-start gap-3 text-left shadow-[0_1px_4px_rgba(0,0,0,0.015)]">
             <div className="p-1.5 bg-red-500/10 text-red-600 rounded-lg flex-shrink-0">
               <BadgeInfo className="w-4.5 h-4.5 text-red-600" />
             </div>
             <div>
-              <h4 className="text-[11.5px] font-black text-slate-700 uppercase tracking-wide mb-0.5">Panduan Informasi</h4>
-              <p className="text-[10.5px] md:text-[11px] leading-relaxed text-slate-500/90 font-medium">
-                Sistem informasi ini memfokuskan transparansi alokasi akomodasi delegasi, pencarian nomor kontak delegasi aktif, serta pengaturan rekan sekamar resmi Konkerkab 1 PGRI.
+              <p className="text-[11px] md:text-xs leading-relaxed text-slate-600 font-medium">
+                Cari data delegasi, cek alokasi penginapan dan nomor kamar, serta temukan rekan sekamar Anda dengan mudah dan cepat.
               </p>
             </div>
           </div>
