@@ -7,7 +7,6 @@ import {
   Phone, 
   Users, 
   ShieldAlert, 
-  BadgeInfo, 
   Building2, 
   Layers, 
   X, 
@@ -332,15 +331,10 @@ export function RoomTab({ submissions }: Props) {
           </div>
 
           {/* Info Badge Container */}
-          <div className="mt-6 bg-gradient-to-r from-red-50/25 to-blue-50/15 rounded-2xl p-4 border border-slate-100 max-w-lg mx-auto flex items-start gap-3 text-left shadow-[0_1px_4px_rgba(0,0,0,0.015)]">
-            <div className="p-1.5 bg-red-500/10 text-red-600 rounded-lg flex-shrink-0">
-              <BadgeInfo className="w-4.5 h-4.5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-[11px] md:text-xs leading-relaxed text-slate-600 font-medium">
-                Cari data delegasi, cek alokasi penginapan dan nomor kamar, serta temukan rekan sekamar Anda dengan mudah dan cepat.
-              </p>
-            </div>
+          <div className="mt-6 bg-gradient-to-r from-red-50/25 to-blue-50/15 rounded-2xl p-3 md:py-3.5 md:px-5 border border-slate-100 max-w-lg mx-auto text-center shadow-[0_1px_4px_rgba(0,0,0,0.015)]">
+            <p className="text-[11px] md:text-xs leading-relaxed text-slate-600 font-medium">
+              Cari data delegasi, cek alokasi penginapan dan nomor kamar, serta temukan rekan sekamar Anda dengan mudah dan cepat.
+            </p>
           </div>
         </motion.div>
       ) : (
