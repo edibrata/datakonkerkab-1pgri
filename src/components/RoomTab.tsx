@@ -198,20 +198,31 @@ export function RoomTab({ submissions }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white p-6 md:p-10 rounded-2xl md:rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden"
+          className="bg-white p-6 md:p-12 rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.03)] border border-slate-100 relative overflow-hidden"
         >
           {/* Decorative Elements */}
-          <div className="absolute top-0 right-0 w-40 h-40 bg-red-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/[0.03] rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/[0.02] rounded-full blur-3xl -ml-28 -mb-28 pointer-events-none" />
           
-          <div className="relative z-10 text-center mb-6 md:mb-8">
-            <span className="text-[10px] font-black uppercase text-red-600 bg-red-50 px-3 py-1 rounded-full tracking-[0.1em] border border-red-100/40 inline-block mb-3">
-              Konkerkab 1 PGRI
+          <div className="relative z-10 text-center mb-8 md:mb-10">
+            <div className="flex justify-center mb-4">
+              <img
+                src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
+                alt="Logo PGRI"
+                referrerPolicy="no-referrer"
+                className="h-16 md:h-20 w-auto object-contain drop-shadow-md select-none pointer-events-none"
+              />
+            </div>
+            <span className="text-[10px] md:text-[11px] font-black uppercase text-red-650 bg-red-50/80 px-3.5 py-1 rounded-full tracking-[0.1em] border border-red-100/30 inline-block mb-3">
+              Konkerkab 1 PGRI Kabupaten Pandeglang
             </span>
             <h2 className="text-2xl md:text-3.5xl font-black text-slate-900 tracking-tight leading-tight">
               Sistem Informasi Peserta
             </h2>
-            <div className="w-12 h-1 bg-red-600 mx-auto mt-3 rounded-full" />
+            <div className="w-12 h-1 bg-red-650 mx-auto mt-4 rounded-full" />
+            <p className="text-xs text-slate-500 max-w-md mx-auto mt-3 font-medium leading-relaxed">
+              Cari data delegasi, cek alokasi penginapan dan nomor kamar, serta temukan rekan sekamar Anda dengan mudah dan cepat.
+            </p>
           </div>
           
           {/* Search Bar Container */}
@@ -334,7 +345,7 @@ export function RoomTab({ submissions }: Props) {
             <div>
               <h4 className="text-[11.5px] font-black text-slate-700 uppercase tracking-wide mb-0.5">Panduan Informasi</h4>
               <p className="text-[10.5px] md:text-[11px] leading-relaxed text-slate-500/90 font-medium">
-                Sistem informasi ini memfasilitasi Anda untuk mengakses alokasi penginapan, nomor delegasi, serta mengecek teman sekamar yang dikoordinasikan oleh panita pelaksana Konkerkab 1.
+                Sistem informasi ini memfokuskan transparansi alokasi akomodasi delegasi, pencarian nomor kontak delegasi aktif, serta pengaturan rekan sekamar resmi Konkerkab 1 PGRI.
               </p>
             </div>
           </div>
@@ -353,7 +364,7 @@ export function RoomTab({ submissions }: Props) {
                 setSelectedPerson(null);
                 setSearch("");
               }}
-              className="text-xs md:text-sm font-bold text-slate-600 hover:text-slate-900 flex items-center gap-2 bg-white hover:bg-slate-50 px-4 py-2.5 rounded-xl transition-all border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-sm"
+              className="text-xs md:text-sm font-bold text-slate-650 hover:text-slate-900 flex items-center gap-2 bg-white hover:bg-slate-50 px-4 py-2.5 rounded-xl transition-all border border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-sm"
             >
               <ArrowLeft className="w-4 h-4 text-slate-500" />
               Kembali ke Pencarian
@@ -361,43 +372,56 @@ export function RoomTab({ submissions }: Props) {
           </div>
           
           {/* Delegate Pass / Card */}
-          <div className="bg-white rounded-[2rem] border border-slate-150 relative shadow-[0_10px_40px_rgba(30,41,59,0.03)] overflow-hidden max-w-2xl mx-auto">
-            {/* Red header strip */}
-            <div className="h-3 bg-gradient-to-r from-red-600 via-red-500 to-amber-500 w-full" />
+          <div className="bg-white rounded-[2rem] border border-slate-100 relative shadow-[0_12px_40px_rgba(15,23,42,0.04)] overflow-hidden max-w-2xl mx-auto">
+            {/* Top Red-Orange elegant gradient header strip */}
+            <div className="h-2.5 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 w-full" />
             
-            <div className="p-6 md:p-9 relative">
+            <div className="p-6 md:p-10 relative">
               {/* Outer watermark pattern behind */}
-              <div className="absolute -top-10 -right-10 w-44 h-44 bg-slate-50 rounded-full opacity-60 flex items-center justify-center pointer-events-none border border-slate-100">
-                <span className="text-[9px] text-slate-300 font-black tracking-widest uppercase rotate-12 select-none">OFFICIAL DELEGATE</span>
+              <div className="absolute -top-10 -right-10 w-48 h-48 bg-slate-50 rounded-full opacity-40 flex items-center justify-center pointer-events-none border border-slate-100 select-none">
+                <span className="text-[10px] text-slate-300 font-extrabold tracking-widest uppercase rotate-12">OFFICIAL DELEGATE</span>
               </div>
 
-              {/* Header Title */}
-              <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
-                <div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] block leading-none mb-1">KARTU PESERTA RESMI</span>
-                  <span className="text-xs font-black text-red-650 tracking-wider uppercase leading-none">KONKERKAB 1 PGRI 2026</span>
+              {/* Header Badge */}
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100/80">
+                <div className="flex items-center gap-2">
+                  <img
+                    src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
+                    alt="Logo Mini"
+                    referrerPolicy="no-referrer"
+                    className="h-6 w-auto object-contain filter grayscale opacity-80"
+                  />
+                  <div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] block leading-none mb-0.5">KARTU PESERTA RESMI</span>
+                    <span className="text-[10px] font-black text-red-650 tracking-wide uppercase leading-none">KONKERKAB 1 PGRI 2026</span>
+                  </div>
                 </div>
-                {/* ID badge counter */}
-                <div className="bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                  <span className="font-mono text-slate-500 font-extrabold text-[10px] md:text-xs tracking-wider">
-                    REG ID: #{selectedPerson.id ? selectedPerson.id.slice(-5).toUpperCase() : "10001"}
+                {/* ID Badge */}
+                <div className="bg-slate-50/80 px-2.5 py-1 rounded-lg border border-slate-250">
+                  <span className="font-mono text-slate-500 font-extrabold text-[10px] tracking-widest">
+                    ID: #{selectedPerson.id ? selectedPerson.id.slice(-5).toUpperCase() : "10001"}
                   </span>
                 </div>
               </div>
 
               {/* Main Content Info */}
-              <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+              <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start relative z-10">
                 <div className="flex-shrink-0 mx-auto md:mx-0">
-                  <PhotoAvatar photoStr={selectedPerson.foto} name={selectedPerson.name} sizeClass="w-28 h-28 md:w-36 md:h-36" roundedClass="rounded-2xl shadow-md ring-4 ring-slate-100" />
+                  <PhotoAvatar 
+                    photoStr={selectedPerson.foto} 
+                    name={selectedPerson.name} 
+                    sizeClass="w-32 h-32 md:w-36 md:h-36" 
+                    roundedClass="rounded-2xl shadow-md ring-4 ring-slate-100/80 border border-slate-200" 
+                  />
                 </div>
                 
                 <div className="flex-1 w-full text-left space-y-4">
                   <div>
-                    <h3 className="text-xl md:text-2.5xl font-black text-slate-900 leading-tight mb-1">
+                    <h3 className="text-xl md:text-2.5xl font-black text-slate-900 leading-tight mb-2">
                       {selectedPerson.name}
                     </h3>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center text-[9px] font-black uppercase text-red-600 bg-red-50 border border-red-100/60 px-2 py-0.5 rounded">
+                      <span className="inline-flex items-center text-[9px] font-black uppercase text-red-600 bg-red-50 border border-red-100/60 px-2 py-0.5 rounded-md">
                         {selectedPerson.kategori || "PESERTA CABANG"}
                       </span>
                       {selectedPerson.kom && getCommissionBadge(selectedPerson.kom)}
@@ -405,50 +429,50 @@ export function RoomTab({ submissions }: Props) {
                   </div>
 
                   {/* Metadata Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-2 pt-1 border-t border-b border-dashed border-slate-100">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 bg-slate-50 text-slate-400 rounded-lg flex-shrink-0">
-                        <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-3 pt-3 border-t border-b border-dashed border-slate-200/80">
+                    <div className="flex items-center gap-3 p-1.5 bg-slate-50/40 rounded-xl border border-slate-100">
+                      <div className="p-2 bg-white text-slate-400 rounded-lg flex-shrink-0 shadow-sm border border-slate-100">
+                        <Building2 className="w-4 h-4 text-slate-500" />
                       </div>
                       <div className="min-w-0">
                         <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none mb-0.5">Sektor Utusan</span>
-                        <span className="text-xs font-bold text-slate-700 uppercase block truncate">
+                        <span className="text-xs font-black text-slate-700 uppercase block truncate">
                           {selectedPerson.branch}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 bg-slate-50 text-slate-400 rounded-lg flex-shrink-0">
-                        <UserRound className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="flex items-center gap-3 p-1.5 bg-slate-50/40 rounded-xl border border-slate-100">
+                      <div className="p-2 bg-white text-slate-400 rounded-lg flex-shrink-0 shadow-sm border border-slate-100">
+                        <UserRound className="w-4 h-4 text-slate-500" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none mb-0.5">Jabatan Delegasi</span>
-                        <span className="text-xs font-bold text-slate-700 block truncate uppercase">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none mb-0.5">Jabatan</span>
+                        <span className="text-xs font-black text-slate-705 block truncate uppercase">
                           {selectedPerson.jabatan || "UTUSAN CABANG"}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 bg-slate-50 text-slate-400 rounded-lg flex-shrink-0">
-                        <Users className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="flex items-center gap-3 p-1.5 bg-slate-50/40 rounded-xl border border-slate-100">
+                      <div className="p-2 bg-white text-slate-400 rounded-lg flex-shrink-0 shadow-sm border border-slate-100">
+                        <Users className="w-4 h-4 text-slate-500" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none mb-0.5">Jenis Kelamin</span>
-                        <span className="text-xs font-bold text-slate-700 block transition-all capitalize">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none mb-0.5">Gender</span>
+                        <span className="text-xs font-black text-slate-700 block transition-all capitalize block truncate">
                           {getGenderText(selectedPerson.jk)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 bg-slate-50 text-slate-405 rounded-lg flex-shrink-0">
-                        <DoorOpen className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="flex items-center gap-3 p-1.5 bg-slate-50/40 rounded-xl border border-slate-100">
+                      <div className="p-2 bg-white text-slate-400 rounded-lg flex-shrink-0 shadow-sm border border-slate-100">
+                        <DoorOpen className="w-4 h-4 text-slate-500" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none mb-0.5">Status Alokasi Kamar</span>
-                        <span className={`text-xs font-extrabold ${selectedPerson.room && selectedPerson.room !== "X" && selectedPerson.room !== "Waiting List" ? "text-blue-600 block" : "text-amber-600 block uppercase"}`}>
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none mb-0.5">Alokasi Kamar</span>
+                        <span className={`text-xs font-black block truncate ${selectedPerson.room && selectedPerson.room !== "X" && selectedPerson.room !== "Waiting List" ? "text-blue-600" : "text-amber-600 uppercase font-extrabold"}`}>
                           {selectedPerson.room && selectedPerson.room !== "X" && selectedPerson.room !== "Waiting List" ? `KAMAR ${selectedPerson.room}` : "Belum Ditentukan"}
                         </span>
                       </div>
@@ -456,22 +480,22 @@ export function RoomTab({ submissions }: Props) {
                   </div>
 
                   {/* Actions Section */}
-                  <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                     <a 
                       href={getWaLink(selectedPerson.wa, false)} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1fbc57] text-white rounded-xl px-4 py-2.5 text-xs font-black shadow-sm transition-all duration-300"
+                      className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1fbc57] text-white rounded-xl px-5 py-3 text-xs font-black shadow-sm transition-all duration-300 transform active:scale-95 text-center cursor-pointer uppercase tracking-wider"
                     >
                       <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
                       </svg>
-                      Kirim WhatsApp
+                      Hubungi WhatsApp
                     </a>
                     
                     <a 
                       href={getWaLink(selectedPerson.wa, true)} 
-                      className="flex items-center justify-center gap-2 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-600 rounded-xl px-4 py-2.5 text-xs font-black shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-colors"
+                      className="flex items-center justify-center gap-2 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl px-5 py-3 text-xs font-black tracking-wider uppercase shadow-sm transition-all cursor-pointer"
                     >
                       <Phone className="w-3.5 h-3.5 text-slate-500" />
                       Telepon Langsung
@@ -483,54 +507,54 @@ export function RoomTab({ submissions }: Props) {
 
             {/* Roommates Card Footer section */}
             <div className="bg-[#f8fafc] border-t border-slate-100 p-6 md:p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="p-1 bg-blue-100 text-blue-600 rounded-md">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                   <Users className="w-4 h-4 text-blue-700" />
                 </div>
-                <h4 className="font-extrabold text-[#111827] text-sm md:text-base">
+                <h4 className="font-extrabold text-slate-900 text-sm md:text-base">
                   Rekan Penginapan Sekamar
                 </h4>
                 {selectedPerson.room && selectedPerson.room !== "X" && selectedPerson.room !== "Waiting List" && (
-                  <span className="text-[10px] font-black text-blue-500 bg-blue-50 border border-blue-100/60 rounded px-2 py-0.5 uppercase tracking-wider ml-auto">
+                  <span className="text-[10px] font-black text-blue-600 bg-blue-100/50 border border-blue-200/40 rounded-full px-3 py-1 uppercase tracking-wider ml-auto">
                     Kamar {selectedPerson.room}
                   </span>
                 )}
               </div>
               
               {roommates.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {roommates.map((mate, idx) => (
                     <div 
                       key={idx} 
-                      className="bg-white rounded-xl p-3 md:p-4 border border-slate-150 hover:border-slate-250 transition-all duration-350 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-between gap-3 group/mate cursor-default"
+                      className="bg-white rounded-2xl p-4 border border-slate-150 hover:border-slate-250 transition-all duration-350 shadow-[0_2px_6px_rgba(0,0,0,0.015)] flex items-center justify-between gap-3 group/mate cursor-default hover:shadow-md animate-fade-in"
                     >
-                      <div className="flex items-center gap-3 md:gap-4 min-w-0">
-                        <PhotoAvatar photoStr={mate.foto} name={mate.name} sizeClass="w-11 h-11 md:w-12 md:h-12" roundedClass="rounded-full shadow-sm ring-2 ring-white" />
+                      <div className="flex items-center gap-3 min-w-0">
+                        <PhotoAvatar photoStr={mate.foto} name={mate.name} sizeClass="w-11 h-11" roundedClass="rounded-full shadow-sm ring-2 ring-white" />
                         <div className="min-w-0">
-                          <p className="font-extrabold text-slate-800 text-xs md:text-sm truncate group-hover/mate:text-red-600 transition-colors">
+                          <p className="font-bold text-slate-800 text-xs md:text-sm truncate group-hover/mate:text-red-650 transition-colors">
                             {mate.name}
                           </p>
-                          <div className="flex items-center gap-2 text-[10px] md:text-xs font-semibold text-slate-450 mt-0.5 uppercase tracking-wide">
-                            <span className="text-slate-500">{mate.branch}</span>
+                          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-450 mt-1 uppercase tracking-wide truncate">
+                            <span className="text-slate-500 truncate max-w-[80px]">{mate.branch}</span>
                             {mate.kom && mate.kom !== "-" && (
                               <>
-                                <span className="h-1 w-1 bg-slate-350 rounded-full" />
-                                <span className="text-red-500">{mate.kom}</span>
+                                <span className="h-1 w-1 bg-slate-300 rounded-full" />
+                                <span className="text-red-500 truncate">{mate.kom}</span>
                               </>
                             )}
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex-shrink-0">
                         <a 
                           href={getWaLink(mate.wa, false)} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-50 hover:bg-emerald-50 border border-slate-150 hover:border-emerald-100 text-slate-450 hover:text-emerald-600 transition-colors"
+                          className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 hover:bg-emerald-50 border border-slate-150 hover:border-emerald-200 text-slate-500 hover:text-emerald-600 transition-all duration-300 hover:scale-110 shadow-sm"
                           title="Hubungi WhatsApp"
                         >
-                          <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
                           </svg>
                         </a>
@@ -539,12 +563,14 @@ export function RoomTab({ submissions }: Props) {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white rounded-xl p-6 border border-slate-150 border-dashed text-center flex flex-col items-center justify-center shadow-sm">
-                  <div className="p-2.5 bg-slate-50 text-slate-350 rounded-full mb-2">
-                    <ShieldAlert className="w-5 h-5 text-slate-400" />
+                <div className="bg-white rounded-2xl p-8 border border-slate-100 border-dashed text-center flex flex-col items-center justify-center shadow-sm">
+                  <div className="p-3 bg-slate-50 text-slate-300 rounded-full mb-3">
+                    <ShieldAlert className="w-6 h-6 text-slate-400" />
                   </div>
-                  <p className="text-slate-650 font-extrabold text-xs md:text-sm">Belum Ada Teman Sekamar</p>
-                  <p className="text-[10px] text-slate-400/80 font-medium mt-0.5">Delegasi lain sedang diproses atau kamar ini masih terisi tunggal.</p>
+                  <p className="text-slate-800 font-bold text-xs md:text-sm">Belum Ada Teman Sekamar</p>
+                  <p className="text-[10.5px] text-slate-400 font-medium max-w-[280px] mx-auto mt-1 leading-relaxed">
+                    Delegasi sekamar untuk status Anda saat ini belum terekam, masih terisi tunggal, atau alokasi sedang diproses.
+                  </p>
                 </div>
               )}
             </div>
