@@ -83,36 +83,41 @@ export const executeRoomMappingPDF = async (
   ];
 
   data.sort((a, b) => {
-    const aRoomStr = String(a.room);
-    const bRoomStr = String(b.room);
-    const aIdx = ROOM_ORDER.indexOf(aRoomStr);
-    const bIdx = ROOM_ORDER.indexOf(bRoomStr);
-    const aOrder = aIdx === -1 ? 999 : aIdx;
-    const bOrder = bIdx === -1 ? 999 : bIdx;
-
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    if (aRoomStr !== bRoomStr) return aRoomStr.localeCompare(bRoomStr);
-    
-    // Sort by Category, then Branch, then Name if same room
-    const priority: Record<string, number> = {
-      "PESERTA CABANG": 1,
-      PANITIA: 2,
-      PENINJAU: 3,
-    };
-    return (
-      (priority[a.kategori] || 99) - (priority[b.kategori] || 99) ||
-      a.branch.localeCompare(b.branch) ||
-      a.name.localeCompare(b.name)
-    );
+    return a.branch.localeCompare(b.branch) || a.name.localeCompare(b.name);
   });
-  const rows = data.map((r, i) => [
-    i + 1,
-    r.branch,
-    r.name,
-    r.jk === "LAKI-LAKI" ? "L" : "P",
-    r.wa,
-    r.room,
-  ]);
+
+  const branchCounts: Record<string, number> = {};
+  data.forEach((r) => {
+    const b = r.branch || "-";
+    branchCounts[b] = (branchCounts[b] || 0) + 1;
+  });
+
+  const branchSeen = new Set<string>();
+  const rows: any[] = [];
+
+  data.forEach((r, i) => {
+    const branchName = r.branch || "-";
+    const isFirst = !branchSeen.has(branchName);
+    if (isFirst) branchSeen.add(branchName);
+
+    const row: any[] = [i + 1];
+
+    if (isFirst) {
+      row.push({
+        content: branchName,
+        rowSpan: branchCounts[branchName],
+        styles: { valign: "middle" }
+      });
+    }
+
+    row.push(
+      r.name,
+      r.jk === "LAKI-LAKI" ? "L" : "P",
+      r.wa,
+      r.room
+    );
+    rows.push(row);
+  });
 
   const startYAfterKop = await drawKopSurat(doc);
 
@@ -120,9 +125,9 @@ export const executeRoomMappingPDF = async (
     startY: startYAfterKop + 15,
     head: [["No", "Entitas", "Nama Lengkap", "JK", "WhatsApp", "Kamar"]],
     body: rows,
-    theme: "striped",
+    theme: "grid",
     showHead: "everyPage",
-    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center", valign: "middle", lineWidth: 0.1, lineColor: [255, 255, 255] },
     styles: { fontSize: 8, cellPadding: 3 },
     columnStyles: {
       0: { halign: "center", cellWidth: 14 },
@@ -133,6 +138,13 @@ export const executeRoomMappingPDF = async (
         fontSize: 13,
         textColor: [185, 28, 28],
       },
+    },
+    didDrawCell: (d: any) => {
+      if (d.section === "body" && d.row.index > 0 && d.row.raw.length === 6) {
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(0, 0, 0);
+        doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
+      }
     },
     didDrawPage: (pageData: any) => {
       if (pageData.pageNumber === 1) {
