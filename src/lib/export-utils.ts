@@ -412,7 +412,6 @@ export const executeTshirtReceiptPDF = async (
       r.name,
       jk,
       (r.sD as any)[`p${r.i}_kaos`] || "-",
-      "",
       ""
     );
     rows.push(row);
@@ -429,8 +428,7 @@ export const executeTshirtReceiptPDF = async (
         "Nama Lengkap",
         "L/P",
         "Ukuran",
-        "Nama Penerima",
-        "Tanda Tangan",
+        "Tanda Tangan dan Nama Penerima",
       ],
     ],
     body: rows,
@@ -442,10 +440,10 @@ export const executeTshirtReceiptPDF = async (
       0: { halign: "center", cellWidth: 15 },
       3: { halign: "center", cellWidth: 14 },
       4: { halign: "center", cellWidth: 20 },
-      6: { cellWidth: 35 },
+      5: { cellWidth: 45 },
     },
     didDrawCell: (d: any) => {
-      if (d.section === "body" && d.row.index > 0 && d.row.raw.length === 7) {
+      if (d.section === "body" && d.row.index > 0 && d.row.raw.length === 6) {
         doc.setLineWidth(0.5);
         doc.setDrawColor(0, 0, 0);
         doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
