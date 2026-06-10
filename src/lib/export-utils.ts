@@ -439,10 +439,17 @@ export const executeTshirtReceiptPDF = async (
     headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center", valign: "middle", lineWidth: 0.1, lineColor: [255, 255, 255] },
     styles: { fontSize: 8, cellPadding: 4 },
     columnStyles: {
-      0: { halign: "center", cellWidth: 12 },
+      0: { halign: "center", cellWidth: 15 },
       3: { halign: "center", cellWidth: 14 },
       4: { halign: "center", cellWidth: 20 },
       6: { cellWidth: 35 },
+    },
+    didDrawCell: (d: any) => {
+      if (d.section === "body" && d.row.index > 0 && d.row.raw.length === 7) {
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(0, 0, 0);
+        doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
+      }
     },
     didDrawPage: (d: any) => {
       if (d.pageNumber === 1) {
