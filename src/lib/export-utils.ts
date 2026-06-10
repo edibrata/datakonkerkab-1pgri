@@ -428,7 +428,7 @@ export const executeTshirtReceiptPDF = async (
         "Nama Lengkap",
         "L/P",
         "Ukuran",
-        "Tanda Tangan dan Nama Penerima",
+        "Tanda Tangan\ndan Nama Penerima",
       ],
     ],
     body: rows,
