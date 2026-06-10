@@ -390,8 +390,8 @@ export const executeTshirtReceiptPDF = async (
   const rows: any[] = [];
   data.forEach((r, i) => {
     let jk = r.jk?.toUpperCase() || "";
-    if (jk === "L" || jk.includes("LAKI")) jk = "L";
-    else if (jk === "P" || jk.includes("PEREMPUAN")) jk = "P";
+    if (jk === "L" || jk.includes("LAKI")) jk = "Lk";
+    else if (jk === "P" || jk.includes("PEREMPUAN")) jk = "Pr";
     else jk = "-";
 
     const branchName = r.branch || "-";
@@ -427,7 +427,7 @@ export const executeTshirtReceiptPDF = async (
         "No",
         "Entitas",
         "Nama Lengkap",
-        "JK",
+        "L/P",
         "Ukuran",
         "Nama Penerima",
         "Tanda Tangan",
@@ -436,11 +436,11 @@ export const executeTshirtReceiptPDF = async (
     body: rows,
     theme: "grid",
     showHead: "everyPage",
-    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
+    headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center", valign: "middle", lineWidth: 0.1, lineColor: [255, 255, 255] },
     styles: { fontSize: 8, cellPadding: 4 },
     columnStyles: {
       0: { halign: "center", cellWidth: 12 },
-      3: { halign: "center", cellWidth: 10 },
+      3: { halign: "center", cellWidth: 14 },
       4: { halign: "center", cellWidth: 20 },
       6: { cellWidth: 35 },
     },
