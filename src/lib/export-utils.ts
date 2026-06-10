@@ -379,14 +379,44 @@ export const executeTshirtReceiptPDF = async (
     if (!isAP && isBP) return 1;
     return a.branch.localeCompare(b.branch) || a.name.localeCompare(b.name);
   });
-  const rows = data.map((r, i) => [
-    i + 1,
-    r.branch,
-    r.name,
-    (r.sD as any)[`p${r.i}_kaos`] || "-",
-    "",
-    "",
-  ]);
+  const branchCounts: Record<string, number> = {};
+  data.forEach((r) => {
+    const b = r.branch || "-";
+    branchCounts[b] = (branchCounts[b] || 0) + 1;
+  });
+
+  const branchSeen = new Set<string>();
+
+  const rows: any[] = [];
+  data.forEach((r, i) => {
+    let jk = r.jk?.toUpperCase() || "";
+    if (jk === "L" || jk.includes("LAKI")) jk = "L";
+    else if (jk === "P" || jk.includes("PEREMPUAN")) jk = "P";
+    else jk = "-";
+
+    const branchName = r.branch || "-";
+    const isFirst = !branchSeen.has(branchName);
+    if (isFirst) branchSeen.add(branchName);
+
+    const row: any[] = [i + 1];
+
+    if (isFirst) {
+      row.push({
+        content: branchName,
+        rowSpan: branchCounts[branchName],
+        styles: { valign: "middle" }
+      });
+    }
+
+    row.push(
+      r.name,
+      jk,
+      (r.sD as any)[`p${r.i}_kaos`] || "-",
+      "",
+      ""
+    );
+    rows.push(row);
+  });
 
   const startYAfterKop = await drawKopSurat(doc);
 
@@ -397,6 +427,7 @@ export const executeTshirtReceiptPDF = async (
         "No",
         "Entitas",
         "Nama Lengkap",
+        "JK",
         "Ukuran",
         "Nama Penerima",
         "Tanda Tangan",
@@ -408,9 +439,10 @@ export const executeTshirtReceiptPDF = async (
     headStyles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
     styles: { fontSize: 8, cellPadding: 4 },
     columnStyles: {
-      0: { halign: "center", cellWidth: 14 },
-      3: { halign: "center", cellWidth: 20 },
-      5: { cellWidth: 35 },
+      0: { halign: "center", cellWidth: 12 },
+      3: { halign: "center", cellWidth: 10 },
+      4: { halign: "center", cellWidth: 20 },
+      6: { cellWidth: 35 },
     },
     didDrawPage: (d: any) => {
       if (d.pageNumber === 1) {
