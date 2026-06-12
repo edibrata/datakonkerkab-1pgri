@@ -285,3 +285,104 @@ export const printAllCardsA4 = async (
   doc.save(filename);
   showModal("BERHASIL", "PDF telah diunduh.", "success");
 };
+
+const mirrorImage = (dataUrl: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const cvs = document.createElement("canvas");
+      cvs.width = img.width;
+      cvs.height = img.height;
+      const ctx = cvs.getContext("2d");
+      if (!ctx) return resolve(dataUrl);
+      ctx.translate(img.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, 0, 0);
+      resolve(cvs.toDataURL("image/jpeg", 1.0));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+};
+
+export const printAllCardsPVC = async (
+  list: FlatAdminRow[],
+  showModal: Function,
+  setProgress: (progress: number) => void,
+) => {
+  if (list.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
+  // A4 Landscape is better for 10 cards per page (5 columns, 2 rows)
+  const doc = new jsPDF("l", "mm", "a4");
+
+  showModal("MEMPROSES", "Sedang menyusun kartu PVC...", "success", true);
+
+  const cw = 54; // card width
+  const ch = 86; // card height
+  const bleed = 1; // 1mm bleed
+  const gapX = 3;
+  const gapY = 10;
+  
+  // 5 cols = 5 * 54 = 270. Gap = 4 * 3 = 12. Total = 282. Margin = 7.5
+  const stX = (297 - (cw * 5 + gapX * 4)) / 2;
+  // 2 rows = 2 * 86 = 172. Gap = 10. Total = 182. Margin = 14
+  const stY = (210 - (ch * 2 + gapY * 1)) / 2;
+
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const isPeserta = item.kategori.includes("PESERTA");
+    const img = await drawSingleCard(
+      item.name,
+      isPeserta ? item.branch : item.jabatan,
+      item.foto,
+      (item.sD as any).kategori,
+    );
+    
+    // Mirror the image for PVC backside printing
+    const mirroredImg = await mirrorImage(img);
+
+    const pIdx = i % 10;
+    if (i > 0 && pIdx === 0) doc.addPage();
+
+    const col = pIdx % 5;
+    const row = Math.floor(pIdx / 5);
+
+    const x = stX + col * (cw + gapX);
+    const y = stY + row * (ch + gapY);
+
+    // Draw image with bleed (+1mm on all sides)
+    doc.addImage(mirroredImg, "JPEG", x - bleed, y - bleed, cw + 2 * bleed, ch + 2 * bleed);
+
+    // Draw crop marks (thin, light gray frame around 54x86 to guide Plong)
+    doc.setLineWidth(0.1);
+    doc.setDrawColor(200, 200, 200); 
+    doc.rect(x, y, cw, ch);
+
+    // Draw little crosses at the corners outside the bleed
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.2);
+    const markLen = 3; // 3mm mark
+    const offset = bleed + 0.5; // Starts 0.5mm outside the bleed
+
+    // Top-Left
+    doc.line(x - offset, y, x - offset - markLen, y);
+    doc.line(x, y - offset, x, y - offset - markLen);
+    
+    // Top-Right
+    doc.line(x + cw + offset, y, x + cw + offset + markLen, y);
+    doc.line(x + cw, y - offset, x + cw, y - offset - markLen);
+
+    // Bottom-Left
+    doc.line(x - offset, y + ch, x - offset - markLen, y + ch);
+    doc.line(x, y + ch + offset, x, y + ch + offset + markLen);
+
+    // Bottom-Right
+    doc.line(x + cw + offset, y + ch, x + cw + offset + markLen, y + ch);
+    doc.line(x + cw, y + ch + offset, x + cw, y + ch + offset + markLen);
+
+    setProgress(((i + 1) / list.length) * 100);
+  }
+
+  const filename = `Konkerkab-1 ID Card Cetak PVC ${getTimestamp()}.pdf`;
+  doc.save(filename);
+  showModal("BERHASIL", "PDF telah diunduh.", "success");
+};
