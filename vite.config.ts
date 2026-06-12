@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/datakonkerkab-1pgri/',
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
