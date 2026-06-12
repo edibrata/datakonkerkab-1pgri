@@ -386,3 +386,106 @@ export const printAllCardsPVC = async (
   doc.save(filename);
   showModal("BERHASIL", "PDF telah diunduh.", "success");
 };
+
+export const printAllCardsPVCNormal = async (
+  list: FlatAdminRow[],
+  showModal: Function,
+  setProgress: (progress: number) => void,
+) => {
+  if (list.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
+  // A4 Landscape is better for 10 cards per page (5 columns, 2 rows)
+  const doc = new jsPDF("l", "mm", "a4");
+
+  showModal("MEMPROSES", "Sedang menyusun kartu PVC (Normal)...", "success", true);
+
+  const cw = 54; // card width
+  const ch = 86; // card height
+  const gapX = 0;
+  const gapY = 0;
+  
+  // 5 cols = 5 * 54 = 270. Total = 270. Margin = 13.5
+  const stX = (297 - (cw * 5)) / 2;
+  // 2 rows = 2 * 86 = 172. Total = 172. Margin = 19
+  const stY = (210 - (ch * 2)) / 2;
+
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const isPeserta = item.kategori.includes("PESERTA");
+    const img = await drawSingleCard(
+      item.name,
+      isPeserta ? item.branch : item.jabatan,
+      item.foto,
+      (item.sD as any).kategori,
+    );
+    
+    const pIdx = i % 10;
+    if (i > 0 && pIdx === 0) doc.addPage();
+
+    const col = pIdx % 5;
+    const row = Math.floor(pIdx / 5);
+
+    const x = stX + col * cw;
+    const y = stY + row * ch;
+
+    // Draw image exactly at dimensions (no bleed because they touch)
+    doc.addImage(img, "JPEG", x, y, cw, ch);
+
+    // After drawing the last card of the page, or the very last card
+    const isLastOfPage = pIdx === 9 || i === list.length - 1;
+    if (isLastOfPage) {
+      const drawnItemsOnPage = pIdx + 1;
+      const colsToDraw = drawnItemsOnPage < 5 ? drawnItemsOnPage : 5;
+      const rowsToDraw = Math.ceil(drawnItemsOnPage / 5);
+
+      doc.setDrawColor(200, 200, 200); // Light gray
+      doc.setLineWidth(0.1);
+
+      const extend = 5; // Extend lines 5mm outside the grid
+
+      // Vertical lines
+      for (let c = 0; c <= colsToDraw; c++) {
+        const lx = stX + c * cw;
+        // determine the height based on how many rows on this specific column
+        let currentRowsToDraw = rowsToDraw;
+        if (drawnItemsOnPage > 5 && c > drawnItemsOnPage % 5 && drawnItemsOnPage % 5 !== 0) {
+          currentRowsToDraw = 1; // second row is incomplete
+        }
+        
+        // Always just draw full height if we want a simple grid. 
+        // Wait, if incomplete page, drawing full grid might be weird, 
+        // but it's simpler. Let's draw lines spanning the actual cards present.
+        const lineH = currentRowsToDraw * ch;
+        // Extend slightly at top and bottom
+        doc.line(lx, stY - extend, lx, stY + lineH + extend);
+      }
+
+      // Horizontal lines
+      for (let r = 0; r <= rowsToDraw; r++) {
+        const ly = stY + r * ch;
+        // determine the width based on how many columns on this specific row
+        let currentColsToDraw = 5;
+        if (r === rowsToDraw && drawnItemsOnPage % 5 !== 0) {
+           // bottom line of incomplete row is handled below, 
+           // wait, actually r loops from 0 to rowsToDraw. 
+           // If r == 1, it's the middle line. Draw full 5 cols if there is a bottom row.
+           // If r == 1 and rowsToDraw == 1, it's the bottom of the first row. 
+           // So drawnItemsOnPage is the width.
+           if (rowsToDraw === 1) currentColsToDraw = drawnItemsOnPage;
+        }
+        if (r === rowsToDraw && r === 2 && drawnItemsOnPage % 5 !== 0) {
+           currentColsToDraw = drawnItemsOnPage % 5;
+        }
+
+        const lineW = currentColsToDraw * cw;
+        // Extend slightly at left and right
+        doc.line(stX - extend, ly, stX + lineW + extend, ly);
+      }
+    }
+
+    setProgress(((i + 1) / list.length) * 100);
+  }
+
+  const filename = `Konkerkab-1 ID Card Cetak Rapat ${getTimestamp()}.pdf`;
+  doc.save(filename);
+  showModal("BERHASIL", "PDF telah diunduh.", "success");
+};

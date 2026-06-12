@@ -22,6 +22,7 @@ import {
   getTimestamp,
   printAllCardsA4,
   printAllCardsPVC,
+  printAllCardsPVCNormal,
 } from "../lib/pdf-utils";
 import { getFlattenedRows } from "../lib/data-utils";
 
@@ -1264,6 +1265,26 @@ export function AdminTab({
                   </svg>
                 </div>
                 <span className="tooltip-text">ID Card PVC (Terbalik)</span>
+              </div>
+              <div
+                onClick={() => {
+                  setShowExportModal(false);
+                  printAllCardsPVCNormal(flattenedRows, showModal, setModalProgress);
+                }}
+                className="export-option-card group tooltip-container"
+              >
+                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                  </svg>
+                </div>
+                <span className="tooltip-text">ID Card (Normal/Rapat)</span>
               </div>
             </div>
           </div>
