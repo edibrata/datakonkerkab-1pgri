@@ -1,5 +1,5 @@
 {
-  "name": "Pendaftaran Konkerkab 1 PGRI Pandeglang",
+  "name": "Informasi Peserta Konkerkab 1 PGRI Pandeglang",
   "description": "Aplikasi Pendaftaran Konferensi Kerja 1 PGRI Kabupaten Pandeglang Tahun 2026",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
