@@ -824,28 +824,37 @@ export const executeMealCouponsPDF = async (
       doc.rect(startX, startY, couponW, couponH);
       
       doc.setFillColor(185, 28, 28);
-      doc.rect(startX, startY, couponW, 8, "F");
+      doc.rect(startX, startY, couponW, 10, "F");
       
       doc.setTextColor(255);
-      doc.setFontSize(8);
+      doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      doc.text("KUPON MAKAN KONKERKAB", startX + couponW / 2, startY + 5.5, { align: "center", maxWidth: couponW - 2 });
+      doc.text("KUPON MAKAN KONKERKAB", startX + couponW / 2, startY + 6.5, { align: "center", maxWidth: couponW - 4 });
+
+      const middleY = startY + 10 + (couponH - 16) / 2;
 
       doc.setTextColor(0);
-      doc.setFontSize(8);
+      doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      
-      doc.text(person.name, startX + 5, startY + 14, { maxWidth: couponW - 10 });
+      doc.text(person.name.toUpperCase(), startX + couponW / 2, middleY - 4, { align: "center", maxWidth: couponW - 4 });
       
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.text(`${person.kategori}`, startX + 5, startY + 20, { maxWidth: couponW - 10 });
-      doc.text(`${person.branch}`, startX + 5, startY + 24, { maxWidth: couponW - 10 });
+      doc.setFontSize(9);
+      doc.text(`${person.kategori} - ${person.branch}`, startX + couponW / 2, middleY + 1, { align: "center", maxWidth: couponW - 4 });
       
-      doc.setFontSize(7);
-      doc.setTextColor(120);
-      doc.text(`Kupon ${c + 1} / 3`, startX + 5, startY + couponH - 4);
-      doc.text(`Hangus stlh pakai`, startX + couponW - 5, startY + couponH - 4, { align: "right" });
+      const extraInfo = [
+        person.kom ? `Komisi: ${person.kom}` : '',
+        person.room ? `Kmr: ${person.room}` : ''
+      ].filter(Boolean).join(" | ");
+
+      if (extraInfo) {
+        doc.text(extraInfo, startX + couponW / 2, middleY + 6, { align: "center", maxWidth: couponW - 4 });
+      }
+      
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(`Kupon ${c + 1} / 3`, startX + 4, startY + couponH - 3);
+      doc.text(`Sobek setelah pakai`, startX + couponW - 4, startY + couponH - 3, { align: "right" });
       
       if (c < cols - 1) {
         doc.setDrawColor(180);
