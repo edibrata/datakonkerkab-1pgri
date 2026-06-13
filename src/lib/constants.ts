@@ -51,3 +51,16 @@ export const BRANCHES = [
 
 export const KOP_SURAT_URL =
   "https://raw.githubusercontent.com/edibrata/image/main/Kop%20Konkerkab-1.2.png";
+
+export const EVENT_AGENDA = [
+  { id: "pleno_1", name: "Sidang Pleno I" },
+  { id: "pembukaan", name: "Pembukaan" },
+  { id: "pleno_2", name: "Sidang Pleno II" },
+  { id: "komisi", name: "Sidang Komisi" },
+  { id: "seminar", name: "Seminar" },
+  { id: "pleno_3", name: "Sidang Pleno III" },
+  { id: "penutupan", name: "Penutupan" },
+  { id: "makan_1", name: "Makan 1" },
+  { id: "makan_2", name: "Makan 2" },
+  { id: "makan_3", name: "Makan 3" }
+];

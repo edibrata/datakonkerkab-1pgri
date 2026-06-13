@@ -65,6 +65,16 @@ export function Navigation({ activeTab, onTabChange, isAdminLoggedIn }: Props) {
             </span>
           </button>
           
+          <button
+            onClick={() => onTabChange("presensi")}
+            className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "presensi" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
+          >
+            <ClipboardList className="h-6 w-6" />
+            <span className="tooltip-text" style={{ width: "auto" }}>
+              Log Presensi
+            </span>
+          </button>
+          
           {isAdminLoggedIn && (
             <button
               onClick={() => onTabChange("data")}

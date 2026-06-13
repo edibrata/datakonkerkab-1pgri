@@ -6,8 +6,11 @@ import { drawKopSurat, getTimestamp } from "./pdf-utils";
 
 import QRCode from "qrcode";
 
+import { EVENT_AGENDA } from "./constants";
+
 export const executeExcelExport = (
   flattenedRows: FlatAdminRow[],
+  attendanceLogs: any[],
   showModal: (
     title: string,
     message: string,
@@ -16,21 +19,42 @@ export const executeExcelExport = (
 ) => {
   if (flattenedRows.length === 0)
     return showModal("ERROR", "Tidak ada data.", "error");
+
+  const getAttendanceMap = () => {
+    const map: Record<string, any> = {};
+    attendanceLogs.forEach((log) => {
+       if (!map[log.participantId]) map[log.participantId] = {};
+       map[log.participantId][log.eventId] = new Date(log.timestamp).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    });
+    return map;
+  };
+  const attendanceMap = getAttendanceMap();
+
   const wb = XLSX.utils.book_new();
-  const standardMap = (r: FlatAdminRow) => ({
-    "Waktu Daftar": r.ts,
-    Kategori: r.kategori,
-    "Cabang/Entitas": r.branch,
-    "Nama Lengkap": r.name,
-    Jabatan: r.jabatan,
-    JK: r.jk,
-    Komisi: r.kom,
-    WhatsApp: r.wa,
-    "Ukuran Kaos": (r.sD as any)[`p${r.i}_kaos`] || "-",
-    "No. Kamar": r.room,
-    "Tautan Mandat": r.mandat,
-    Token: r.token,
-  });
+  const standardMap = (r: FlatAdminRow) => {
+    const base: any = {
+      "Waktu Daftar": r.ts,
+      Kategori: r.kategori,
+      "Cabang/Entitas": r.branch,
+      "Nama Lengkap": r.name,
+      Jabatan: r.jabatan,
+      JK: r.jk,
+      Komisi: r.kom,
+      WhatsApp: r.wa,
+      "Ukuran Kaos": (r.sD as any)[`p${r.i}_kaos`] || "-",
+      "No. Kamar": r.room,
+      "Tautan Mandat": r.mandat,
+      Token: r.token,
+    };
+
+    const participantId = `${r.id}-${r.i}`;
+    const pLogs = attendanceMap[participantId] || {};
+    EVENT_AGENDA.forEach((ev) => {
+      base[`Hadir - ${ev.name}`] = pLogs[ev.id] || "";
+    });
+
+    return base;
+  };
   XLSX.utils.book_append_sheet(
     wb,
     XLSX.utils.json_to_sheet(flattenedRows.map(standardMap)),

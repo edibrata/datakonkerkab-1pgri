@@ -6,6 +6,7 @@ import { SubmissionData } from "../types";
 
 export const useFirebaseData = () => {
   const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
+  const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +37,15 @@ export const useFirebaseData = () => {
       },
     );
 
+    const logsRef = collection(db, "attendanceLogs");
+    const unsubLogs = onSnapshot(logsRef, (snapshot) => {
+      const logs: any[] = [];
+      snapshot.forEach((doc) => {
+        logs.push({ ...doc.data(), id: doc.id });
+      });
+      setAttendanceLogs(logs);
+    });
+
     const settingsRef = doc(
       db,
       "artifacts",
@@ -53,9 +63,10 @@ export const useFirebaseData = () => {
 
     return () => {
       unsubPendaftar();
+      unsubLogs();
       unsubSettings();
     };
   }, []);
 
-  return { submissions, isRegistrationOpen, loading };
+  return { submissions, attendanceLogs, isRegistrationOpen, loading };
 };

@@ -5,13 +5,14 @@ import { HomeTab } from "./components/HomeTab";
 import { FormTab } from "./components/FormTab";
 import { AdminTab } from "./components/AdminTab";
 import { ScannerTab } from "./components/ScannerTab";
+import { AttendanceTab } from "./components/AttendanceTab";
 import { SubmissionData } from "./types";
 
 import { RoomTab } from "./components/RoomTab";
 import { AdminLogin } from "./components/AdminLogin";
 
 export default function App() {
-  const { submissions, isRegistrationOpen, loading } = useFirebaseData();
+  const { submissions, attendanceLogs, isRegistrationOpen, loading } = useFirebaseData();
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(!!localStorage.getItem("pgri_admin_pass"));
   const [activeTab, setActiveTab] = useState(!!localStorage.getItem("pgri_admin_pass") ? "beranda" : "info_peserta");
 
@@ -128,6 +129,7 @@ export default function App() {
                 {activeTab === "data" && (
                   <AdminTab
                     submissions={submissions}
+                    attendanceLogs={attendanceLogs}
                     isRegistrationOpen={isRegistrationOpen}
                     showModal={showModal}
                     setModalProgress={setModalProgress}
@@ -159,6 +161,10 @@ export default function App() {
 
             {activeTab === "info_peserta" && (
               <RoomTab submissions={submissions} />
+            )}
+
+            {activeTab === "presensi" && (
+              <AttendanceTab submissions={submissions} attendanceLogs={attendanceLogs} />
             )}
           </>
         )}

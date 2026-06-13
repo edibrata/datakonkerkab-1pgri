@@ -29,6 +29,7 @@ import { getFlattenedRows } from "../lib/data-utils";
 
 interface Props {
   submissions: SubmissionData[];
+  attendanceLogs: any[];
   isRegistrationOpen: boolean;
   showModal: (
     title: string,
@@ -44,6 +45,7 @@ interface Props {
 
 export function AdminTab({
   submissions,
+  attendanceLogs,
   isRegistrationOpen,
   showModal,
   setModalProgress,
@@ -1034,7 +1036,7 @@ export function AdminTab({
               <div
                 onClick={() => {
                   setShowExportModal(false);
-                  executeExcelExport(flattenedRows, showModal);
+                  executeExcelExport(flattenedRows, attendanceLogs, showModal);
                 }}
                 className="export-option-card group tooltip-container"
               >
