@@ -13,6 +13,8 @@ const KonfirmasiTab = lazy(() => import("./components/KonfirmasiTab").then(modul
 const RoomTab = lazy(() => import("./components/RoomTab").then(module => ({ default: module.RoomTab })));
 const AdminLogin = lazy(() => import("./components/AdminLogin").then(module => ({ default: module.AdminLogin })));
 
+const DeveloperProfileModal = lazy(() => import("./components/DeveloperProfileModal"));
+
 export default function App() {
   const { submissions, attendanceLogs, confirmations, trashRecords, isRegistrationOpen, activeEventId, loading } = useFirebaseData();
   const getInitRole = (): "full" | "scanner" | null => {
@@ -35,6 +37,7 @@ export default function App() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showDeveloperProfile, setShowDeveloperProfile] = useState(false);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [editSubmissionData, setEditSubmissionData] = useState<SubmissionData | null>(null);
@@ -80,7 +83,12 @@ export default function App() {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col text-sm relative">
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} adminRole={adminRole} />
+      <Navigation 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        adminRole={adminRole} 
+        onLogoClick={() => setShowDeveloperProfile(true)} 
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex-grow w-full">
         {loading ? (
@@ -201,11 +209,20 @@ export default function App() {
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
             Konkerkab 1 PGRI Pandeglang 2026
           </span>
-          <span className="text-[11px] font-black text-red-400 uppercase tracking-[0.2em]">
+          <span 
+            className="text-[11px] font-black text-red-400 uppercase tracking-[0.2em] cursor-pointer hover:text-red-500 transition-colors"
+            onClick={() => setShowDeveloperProfile(true)}
+          >
             DEVELOPED BY EDI BRATA
           </span>
         </div>
       </footer>
+
+      {showDeveloperProfile && (
+        <Suspense fallback={null}>
+          <DeveloperProfileModal onClose={() => setShowDeveloperProfile(false)} />
+        </Suspense>
+      )}
 
       {/* Generic Alert Modal */}
       {modalConfig && (

@@ -210,7 +210,7 @@ export function RoomTab({ submissions }: Props) {
           <div className="relative z-10 text-center mb-6 md:mb-8">
             <div className="flex justify-center mb-4">
               <img
-                src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official.png?raw=true"
+                src="https://raw.githubusercontent.com/edibrata/image/main/Logo%20PGRI%20Official%20Full.png"
                 alt="Logo PGRI"
                 referrerPolicy="no-referrer"
                 className="h-16 md:h-20 w-auto object-contain drop-shadow-md select-none pointer-events-none"
@@ -374,7 +374,7 @@ export function RoomTab({ submissions }: Props) {
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100/80">
                 <div className="flex items-center gap-2">
                   <img
-                    src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official.png?raw=true"
+                    src="https://raw.githubusercontent.com/edibrata/image/main/Logo%20PGRI%20Official%20Full.png"
                     alt="Logo Mini"
                     referrerPolicy="no-referrer"
                     className="h-6 w-auto object-contain filter grayscale opacity-80"

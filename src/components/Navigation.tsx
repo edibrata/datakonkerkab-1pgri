@@ -4,18 +4,25 @@ interface Props {
   activeTab: string;
   onTabChange: (tab: string) => void;
   adminRole: "full" | "scanner" | null;
+  onLogoClick?: () => void;
 }
 
-export function Navigation({ activeTab, onTabChange, adminRole }: Props) {
+export function Navigation({ activeTab, onTabChange, adminRole, onLogoClick }: Props) {
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-[100] border-b border-slate-200">
       <div className="max-w-[96%] mx-auto px-2 md:px-4 flex items-center h-14 md:h-16 gap-3 md:gap-6">
         <div
           className="flex items-center gap-2 md:gap-3 cursor-pointer group flex-shrink-0"
-          onClick={() => onTabChange(adminRole === "full" ? "beranda" : "info_peserta")}
+          onClick={() => {
+            if (onLogoClick) {
+              onLogoClick();
+            } else {
+              onTabChange(adminRole === "full" ? "beranda" : "info_peserta");
+            }
+          }}
         >
           <img
-            src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official.png?raw=true"
+            src="https://raw.githubusercontent.com/edibrata/image/main/Logo%20PGRI%20Official%20Full.png"
             alt="Logo PGRI"
             referrerPolicy="no-referrer"
             className="h-8 md:h-10 w-auto group-hover:scale-105 transition-transform duration-300"

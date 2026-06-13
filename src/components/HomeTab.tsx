@@ -143,7 +143,7 @@ export function HomeTab({
       <div className="bg-white border border-slate-200 rounded-lg p-6 md:p-10 overflow-hidden relative shadow-sm text-center md:text-left">
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
           <img
-            src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official.png?raw=true"
+            src="https://raw.githubusercontent.com/edibrata/image/main/Logo%20PGRI%20Official%20Full.png"
             alt="Logo"
             referrerPolicy="no-referrer"
             className="w-24 md:w-32 h-auto"
