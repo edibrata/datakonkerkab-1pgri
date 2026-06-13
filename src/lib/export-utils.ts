@@ -858,37 +858,76 @@ export const executeMealCouponsPDF = async (
       doc.setFont("helvetica", "bold");
       doc.text("KUPON MAKAN KONKERKAB", startX + couponW / 2, startY + 6.5, { align: "center", maxWidth: couponW - 4 });
 
-      const middleY = startY + 10 + (couponH - 10) / 2;
-
       doc.setTextColor(0);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(person.name.toUpperCase(), startX + couponW / 2, middleY - 6, { align: "center", maxWidth: couponW - 4 });
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(`${person.kategori} - ${person.branch}`, startX + couponW / 2, middleY - 2, { align: "center", maxWidth: couponW - 4 });
       
       const extraInfo = [
-        person.kom ? `Komisi: ${person.kom}` : '',
-        person.room ? `Kmr: ${person.room}` : ''
-      ].filter(Boolean).join(" | ");
+        person.kom ? person.kom : '',
+        person.room ? `KAMAR ${person.room}` : ''
+      ].filter(Boolean).join(" • ");
 
-      if (extraInfo) {
-        doc.text(extraInfo, startX + couponW / 2, middleY + 2, { align: "center", maxWidth: couponW - 4 });
+      // Calculate layout
+      const photoW = 15;
+      const photoH = 20;
+      const leftMargin = startX + 4;
+      
+      const contentStartX = leftMargin + photoW + 3;
+      const contentWidth = couponW - (contentStartX - startX) - 3;
+      const contentCenterX = contentStartX + contentWidth / 2;
+
+      const hasExtra = !!extraInfo;
+      const blockHeight = hasExtra ? 25 : 21;
+      const availableSpace = couponH - 14; // from y=10 to y=couponH-4
+      const topMargin = 10 + (availableSpace - blockHeight) / 2;
+      const photoY = startY + 10 + (availableSpace - photoH) / 2;
+      
+      if (person.foto) {
+        try {
+          let format = "JPEG";
+          if (person.foto.includes("image/png")) format = "PNG";
+          else if (person.foto.includes("image/webp")) format = "WEBP";
+          doc.addImage(person.foto, format, leftMargin, photoY, photoW, photoH);
+        } catch (e) {
+          // Fallback if image fails
+          doc.setDrawColor(200);
+          doc.setFillColor(240);
+          doc.rect(leftMargin, photoY, photoW, photoH, "F");
+          doc.rect(leftMargin, photoY, photoW, photoH, "S");
+        }
+      } else {
+        doc.setDrawColor(200);
+        doc.setFillColor(240);
+        doc.rect(leftMargin, photoY, photoW, photoH, "F");
+        doc.rect(leftMargin, photoY, photoW, photoH, "S");
+      }
+      
+      let currentY = startY + topMargin + 3.5; // Baseline for Name
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(person.name.toUpperCase(), contentCenterX, currentY, { align: "center", maxWidth: contentWidth });
+      
+      currentY += 4;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(`${person.kategori} - ${person.branch}`, contentCenterX, currentY, { align: "center", maxWidth: contentWidth });
+      
+      if (hasExtra) {
+        currentY += 4;
+        doc.text(extraInfo, contentCenterX, currentY, { align: "center", maxWidth: contentWidth });
       }
 
+      currentY += 1.5;
       try {
         const qrDataUrl = await QRCode.toDataURL(`${person.id}-${person.i}`, { margin: 0, width: 60, color: { dark: '#000000', light: '#ffffff' } });
-        // 12x12 QR code centered
-        doc.addImage(qrDataUrl, "PNG", startX + (couponW - 12) / 2, middleY + 3.5, 12, 12);
+        // 12x12 QR code centered under text
+        doc.addImage(qrDataUrl, "PNG", contentCenterX - 6, currentY, 12, 12);
       } catch (e) {
         console.error(e);
       }
       
       doc.setFontSize(7);
       doc.setTextColor(120);
-      doc.text(`Kupon ${c + 1} / 3`, startX + 3, startY + couponH - 2);
+      doc.text(`Kupon ${c + 1}/3`, startX + 3, startY + couponH - 2);
       doc.text(`Sobek stlh pakai`, startX + couponW - 3, startY + couponH - 2, { align: "right" });
       
       if (c < cols - 1) {
@@ -910,10 +949,15 @@ export const executeScannedResultPDF = async (
   flattenedRows: FlatAdminRow[],
   attendanceLogs: any[],
   showModal: Function,
-  eventId?: string
+  eventId?: string,
+  komisiName?: string
 ) => {
   const doc = new jsPDF("p", "mm", "a4");
-  const data = [...flattenedRows];
+  let data = [...flattenedRows];
+  
+  if (komisiName) {
+    data = data.filter(r => r.kom === komisiName);
+  }
 
   if (data.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
 
@@ -956,7 +1000,8 @@ export const executeScannedResultPDF = async (
       doc.setFontSize(14);
       doc.setTextColor(15, 23, 42); // slate 900
       doc.setFont("helvetica", "bold");
-      doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop1 + 8, {
+      const titleStr = komisiName ? `${event.name.toUpperCase()} - ${komisiName}` : event.name.toUpperCase();
+      doc.text(`HASIL SCAN ${titleStr}`, 105, startYAfterKop1 + 8, {
         align: "center",
       });
       doc.setFontSize(10);
@@ -987,16 +1032,17 @@ export const executeScannedResultPDF = async (
         styles: { fontSize: 8, cellPadding: 2 },
         columnStyles: { 0: { halign: "center", cellWidth: 10 }, 1: { halign: "center", cellWidth: 15 }, 3: { cellWidth: 45 }, 4: { cellWidth: 35 } },
         didDrawPage: (d: any) => {
-          if (d.pageNumber === startPageAt1) {
+          if (d.pageNumber === 1) {
             doc.setFontSize(14);
             doc.setTextColor(15, 23, 42);
             doc.setFont("helvetica", "bold");
-            doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop1 + 6, {
+            const titleStr = komisiName ? `${event.name.toUpperCase()} - ${komisiName}` : event.name.toUpperCase();
+            doc.text(`HASIL SCAN ${titleStr}`, 105, startYAfterKop1 + 6, {
               align: "center",
             });
             doc.setFontSize(9);
             doc.setFont("helvetica", "normal");
-            doc.text(`Jumlah Hadir: ${attendees.length}`, 105, startYAfterKop1 + 11, { align: "center" });
+            doc.text(`Jumlah Hadir: ${attendees.length} (${Math.round((attendees.length / data.length) * 100)}%)`, 105, startYAfterKop1 + 11, { align: "center" });
           }
         },
       });
@@ -1017,7 +1063,8 @@ export const executeScannedResultPDF = async (
       doc.setFontSize(14);
       doc.setTextColor(15, 23, 42);
       doc.setFont("helvetica", "bold");
-      doc.text(`BELUM SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop2 + 8, {
+      const titleStr = komisiName ? `${event.name.toUpperCase()} - ${komisiName}` : event.name.toUpperCase();
+      doc.text(`BELUM SCAN ${titleStr}`, 105, startYAfterKop2 + 8, {
         align: "center",
       });
       doc.setFontSize(10);
@@ -1043,16 +1090,17 @@ export const executeScannedResultPDF = async (
         styles: { fontSize: 8, cellPadding: 2 },
         columnStyles: { 0: { halign: "center", cellWidth: 10 }, 1: { cellWidth: 40 }, 3: { cellWidth: 35 }, 4: { cellWidth: 30 } },
         didDrawPage: (d: any) => {
-          if (d.pageNumber === startPageAt2) {
+          if (d.pageNumber === 1) {
             doc.setFontSize(14);
             doc.setTextColor(15, 23, 42); 
             doc.setFont("helvetica", "bold");
-            doc.text(`BELUM SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop2 + 6, {
+            const titleStr = komisiName ? `${event.name.toUpperCase()} - ${komisiName}` : event.name.toUpperCase();
+            doc.text(`BELUM SCAN ${titleStr}`, 105, startYAfterKop2 + 6, {
               align: "center",
             });
             doc.setFontSize(9);
             doc.setFont("helvetica", "normal");
-            doc.text(`Jumlah Belum Scan: ${notScanned.length}`, 105, startYAfterKop2 + 11, { align: "center" });
+            doc.text(`Jumlah Belum Scan: ${notScanned.length} (${Math.round((notScanned.length / data.length) * 100)}%)`, 105, startYAfterKop2 + 11, { align: "center" });
           }
         },
       });
@@ -1091,7 +1139,7 @@ export const executeScannedResultPDF = async (
       styles: { fontSize: 8, cellPadding: 2 },
       columnStyles: { 0: { halign: "center", cellWidth: 20 }, 1: { cellWidth: 70 }, 2: { cellWidth: 70 }, 3: { halign: "center", cellWidth: 30 } },
       didDrawPage: (d: any) => {
-        if (d.pageNumber === startPageAtLeader) {
+        if (d.pageNumber === 1) {
           doc.setFontSize(14);
           doc.setTextColor(15, 23, 42); 
           doc.setFont("helvetica", "bold");
@@ -1129,27 +1177,39 @@ export const executeScannedResultPDF = async (
     }
   });
 
-  const eventName = eventId ? EVENT_AGENDA.find(e => e.id === eventId)?.name : '';
-  doc.save(`Konkerkab-1 Hasil Scan Presensi ${eventName ? eventName + ' ' : ''}${getTimestamp()}.pdf`);
+  const eventNameStr = eventId ? EVENT_AGENDA.find(e => e.id === eventId)?.name : '';
+  const komisiStr = komisiName ? ` ${komisiName}` : '';
+  doc.save(`Konkerkab-1 Hasil Scan Presensi ${eventNameStr ? eventNameStr : 'Semua Agenda'}${komisiStr} ${getTimestamp()}.pdf`);
 };
 
 export const executeKuorumPDF = async (
   flattenedRows: FlatAdminRow[],
   attendanceLogs: any[],
   confirmations: any[],
+  activeEventId: string,
+  komisiName?: string
 ) => {
   const doc = new jsPDF("p", "mm", "a4");
   let startYAfterKop = await drawKopSurat(doc);
   let startPageAt = (doc as any).internal.getNumberOfPages();
 
-  const pesertaCabang = flattenedRows.filter(r => r.kategori === "PESERTA CABANG").sort((a, b) => {
+  let filteredRows = flattenedRows;
+  if (komisiName) {
+    filteredRows = flattenedRows.filter(r => r.kom === komisiName);
+  }
+
+  const pesertaCabang = filteredRows.filter(r => r.kategori === "PESERTA CABANG").sort((a, b) => {
     const branchCmp = a.branch.localeCompare(b.branch);
     if (branchCmp !== 0) return branchCmp;
     return a.name.localeCompare(b.name);
   });
   const totalPesertaHakSuara = pesertaCabang.length;
 
-  const eventId = "pleno_1";
+  const eventId = activeEventId || "pleno_1";
+  let eventName = EVENT_AGENDA.find(e => e.id === eventId)?.name || "SIDANG PLENO I";
+  if (komisiName) {
+    eventName = `${eventName} - ${komisiName}`;
+  }
   const logsForEvent = attendanceLogs.filter(l => l.eventId === eventId);
   const confirmsForEvent = confirmations.filter(c => c.eventId === eventId);
 
@@ -1168,13 +1228,13 @@ export const executeKuorumPDF = async (
 
     let statusStr = "";
     if (hasScanned) {
-      statusStr = "✅ Hadir (Scan Barcode)";
+      statusStr = "Hadir (Scan Barcode)";
       stats.hadirFisik++;
     } else if (hasConfirmed) {
-      statusStr = "⏳ Dikonfirmasi (Belum Scan)";
+      statusStr = "Dikonfirmasi (Belum Scan)";
       stats.sudahKonfirmasi++;
     } else {
-      statusStr = "❌ Belum Ada Keterangan";
+      statusStr = "Belum Ada Keterangan";
       stats.belumAdaKeterangan++;
     }
 
@@ -1192,39 +1252,61 @@ export const executeKuorumPDF = async (
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("LAPORAN KUORUM - SIDANG PLENO I", 105, startYAfterKop, { align: "center" });
+  const titleY = startYAfterKop + 8;
+  doc.text(`LAPORAN KUORUM - ${eventName.toUpperCase()}`, 105, titleY, { align: "center" });
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  const yStatsStart = startYAfterKop + 10;
-  doc.text(`Total Peserta Hak Suara: ${totalPesertaHakSuara}`, 15, yStatsStart);
-  doc.text(`Hadir Fisik (Scan Barcode): ${stats.hadirFisik}`, 15, yStatsStart + 6);
-  doc.text(`Menunggu Masuk (Sudah Konfirmasi): ${stats.sudahKonfirmasi}`, 15, yStatsStart + 12);
+  const yStatsStart = titleY + 10;
+  
+  doc.text("Total Peserta Hak Suara", 15, yStatsStart);
+  doc.text(`: ${totalPesertaHakSuara}`, 80, yStatsStart);
+  
+  doc.text("Hadir Fisik (Scan Barcode)", 15, yStatsStart + 6);
+  doc.text(`: ${stats.hadirFisik}`, 80, yStatsStart + 6);
+  
+  doc.text("Menunggu Masuk (Sudah Konfirmasi)", 15, yStatsStart + 12);
+  doc.text(`: ${stats.sudahKonfirmasi}`, 80, yStatsStart + 12);
   
   doc.setFont("helvetica", "bold");
-  doc.text(`Total Kuorum Dicapai: ${totalKuorum}/${totalPesertaHakSuara} (${kuorumPercent}% - ${isMemenuhi ? 'MEMENUHI KUORUM' : 'BELUM MEMENUHI'})`, 15, yStatsStart + 20);
+  doc.text("Total Kuorum Dicapai", 15, yStatsStart + 20);
+  doc.text(`: ${totalKuorum}/${totalPesertaHakSuara} (${kuorumPercent}% - ${isMemenuhi ? 'MEMENUHI KUORUM' : 'BELUM MEMENUHI'})`, 80, yStatsStart + 20);
 
   autoTable(doc, {
     startY: yStatsStart + 25,
     margin: { top: 25 },
     head: [["No", "Nama Lengkap", "Entitas Cabang", "Status Kehadiran"]],
     body: rows,
-    theme: "striped",
+    theme: "grid",
     showHead: "everyPage",
     headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: "bold", halign: "center" },
     styles: { fontSize: 9, cellPadding: 3 },
     columnStyles: { 0: { halign: "center", cellWidth: 15 }, 1: { cellWidth: 60 }, 2: { cellWidth: 50 }, 3: { cellWidth: 'auto' } },
+    didParseCell: (data: any) => {
+      if (data.section === 'body') {
+        const status = data.row.raw[3];
+        if (status === "Hadir (Scan Barcode)") {
+          data.cell.styles.fillColor = [220, 252, 231]; 
+          data.cell.styles.textColor = [21, 128, 61]; 
+          data.cell.styles.fontStyle = 'bold';
+        } else if (status === "Dikonfirmasi (Belum Scan)") {
+          data.cell.styles.fillColor = [254, 240, 138];
+          data.cell.styles.textColor = [161, 98, 7];
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    },
     didDrawPage: (d: any) => {
-      if (d.pageNumber === startPageAt) {
+      if (d.pageNumber === 1) {
         // first page logic already handled by Kop
       } else {
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text("LAPORAN KUORUM - SIDANG PLENO I", 105, 15, { align: "center" });
+        doc.text(`LAPORAN KUORUM - ${eventName.toUpperCase()}`, 105, 15, { align: "center" });
         d.settings.startY = 25;
       }
     },
   });
 
-  doc.save(`Konkerkab-1 Laporan Kuorum Pleno I ${getTimestamp()}.pdf`);
+  doc.save(`Konkerkab-1 Laporan Kuorum ${eventName} ${getTimestamp()}.pdf`);
 };

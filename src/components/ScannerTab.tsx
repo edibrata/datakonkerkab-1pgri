@@ -202,7 +202,7 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
 
       <div className="space-y-6">
         <div className="text-center md:text-left">
-          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Pilih Agenda / Kegiatan</label>
+          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Pilih Agenda/Kegiatan</label>
           <select 
             className="w-full text-center md:text-left bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold uppercase p-3 rounded focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 outline-none"
             value={selectedEvent}

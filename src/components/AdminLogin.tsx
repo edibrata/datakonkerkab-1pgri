@@ -26,7 +26,7 @@ export function AdminLogin({ onLoginSuccess, showModal }: Props) {
     <div className="max-w-md mx-auto py-10">
       <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-xl text-center">
         <img
-          src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
+          src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official.png?raw=true"
           alt="Logo"
           referrerPolicy="no-referrer"
           className="h-16 w-auto mx-auto mb-6 drop-shadow-sm"

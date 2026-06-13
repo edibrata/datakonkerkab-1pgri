@@ -44,6 +44,9 @@ export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] 
         count,
         confirmCount,
         percentage: totalPesertaCabang ? Math.round((count / totalPesertaCabang) * 100) : 0,
+        confirmPercentage: totalPesertaCabang ? Math.round((confirmCount / totalPesertaCabang) * 100) : 0,
+        totalSummary: count + confirmCount,
+        totalPercentage: totalPesertaCabang ? Math.round(((count + confirmCount) / totalPesertaCabang) * 100) : 0,
       };
     });
   }, [attendanceLogs, confirmations, flatRows, totalPesertaCabang]);
@@ -79,22 +82,37 @@ export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] 
     <div className="space-y-4 md:space-y-6">
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 text-left">
         <h2 className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tight mb-4 text-center md:text-left">Statistik Presensi</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-          <div className="col-span-2 sm:col-span-1 bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col justify-between text-center md:text-left">
-            <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest leading-tight">Total Peserta Cabang</span>
-            <span className="text-2xl md:text-3xl font-black text-slate-800 mt-2">{totalPesertaCabang}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="col-span-2 sm:col-span-full md:col-span-1 bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-center text-center md:text-left">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-tight">Total Peserta Cabang</span>
+            <span className="text-3xl font-black text-slate-800 mt-1">{totalPesertaCabang}</span>
           </div>
           {stats.map((stat) => (
-            <div key={stat.id} className="bg-emerald-50/50 p-3 md:p-4 rounded-xl border border-emerald-100 flex flex-col justify-between text-center md:text-left relative">
-              <span className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-tight">{stat.name}</span>
-              <div className="flex flex-col mt-2 gap-1">
-                <div className="flex items-end justify-center md:justify-start gap-1 md:gap-2">
-                  <span className="text-sm font-black text-emerald-700 leading-none" title="Telah Scan">SCAN: {stat.count}</span>
-                  <span className="text-[10px] md:text-xs font-bold text-emerald-500 pb-0.5">({stat.percentage}%)</span>
+            <div key={stat.id} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col justify-between text-left shadow-sm hover:shadow-md transition-shadow">
+              <span 
+                className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 pb-2 mb-2 truncate" 
+                title={stat.name}
+              >
+                {stat.name}
+              </span>
+              <div className="flex flex-col gap-1.5 mt-auto">
+                <div className="grid grid-cols-[1fr_28px_36px] gap-1 items-end">
+                  <span className="text-[10px] sm:text-xs font-bold text-emerald-700 tracking-wide leading-none pb-[1px]">SCAN</span>
+                  <span className="text-sm sm:text-base font-black text-emerald-700 text-right leading-none">{stat.count}</span>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 text-right leading-none pb-[2px]">({stat.percentage}%)</span>
                 </div>
                 {!stat.id.includes("makan") && (
-                  <div className="flex items-end justify-center md:justify-start gap-1 md:gap-2">
-                    <span className="text-sm font-black text-indigo-600 leading-none" title="Konfirmasi Kehadiran">AWAL: {stat.confirmCount}</span>
+                  <div className="grid grid-cols-[1fr_28px_36px] gap-1 items-end">
+                    <span className="text-[10px] sm:text-xs font-bold text-indigo-600 tracking-wide leading-none pb-[1px]">CONFIRM</span>
+                    <span className="text-sm sm:text-base font-black text-indigo-600 text-right leading-none">{stat.confirmCount}</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-indigo-500 text-right leading-none pb-[2px]">({stat.confirmPercentage}%)</span>
+                  </div>
+                )}
+                 {!stat.id.includes("makan") && (
+                  <div className="grid grid-cols-[1fr_28px_36px] gap-1 items-end pt-1.5 mt-0.5 border-t border-slate-100">
+                    <span className="text-[10px] sm:text-xs font-black text-slate-700 tracking-wide leading-none pb-[1px]">JUMLAH</span>
+                    <span className="text-sm sm:text-base font-black text-slate-800 text-right leading-none">{stat.totalSummary}</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 text-right leading-none pb-[2px]">({stat.totalPercentage}%)</span>
                   </div>
                 )}
               </div>
@@ -105,7 +123,7 @@ export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] 
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-3 md:gap-4 items-center justify-between">
-          <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight self-start md:self-auto">Rincian Log</h2>
+          <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight text-center md:text-left w-full md:w-auto">Rincian Log</h2>
           <div className="flex flex-col sm:flex-row w-full md:w-auto gap-2">
             <select
               className="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold uppercase p-2 rounded-lg focus:outline-none focus:border-red-400 w-full sm:w-auto"
@@ -119,7 +137,7 @@ export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] 
             </select>
             <input
               type="text"
-              placeholder="Cari nama / cabang..."
+              placeholder="Cari nama/cabang..."
               className="bg-slate-50 border border-slate-200 text-slate-800 text-sm p-2 rounded-lg focus:outline-none focus:border-red-400 w-full sm:w-auto min-w-0 md:min-w-[200px]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

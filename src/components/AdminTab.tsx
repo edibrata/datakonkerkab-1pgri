@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { SubmissionData, FlatAdminRow } from "../types";
 import { db } from "../lib/firebase";
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
@@ -34,7 +34,9 @@ interface Props {
   submissions: SubmissionData[];
   attendanceLogs: any[];
   confirmations: any[];
+  trashRecords: any[];
   isRegistrationOpen: boolean;
+  activeEventId: string;
   showModal: (
     title: string,
     message: string,
@@ -51,7 +53,9 @@ export function AdminTab({
   submissions,
   attendanceLogs,
   confirmations,
+  trashRecords,
   isRegistrationOpen,
+  activeEventId,
   showModal,
   setModalProgress,
   onViewPrevew,
@@ -68,11 +72,105 @@ export function AdminTab({
   } | null>(null);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showExportModal, setShowExportModal] = useState(false);
-  const [exportSubMenu, setExportSubMenu] = useState<"main" | "scan">("main");
+  const [exportSubMenu, setExportSubMenu] = useState<string>("main");
   const [activeRowActions, setActiveRowActions] = useState<string | null>(null);
+
+  const [showTrashModal, setShowTrashModal] = useState(false);
 
   const [editingRecord, setEditingRecord] = useState<{ id: string; i: number; data: any } | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBackupJSON = () => {
+    const data = {
+      submissions,
+      attendanceLogs,
+      confirmations,
+      trashRecords,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Backup-Konkerkab-${getTimestamp()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRestoreJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const content = event.target?.result as string;
+        const data = JSON.parse(content);
+        
+        setConfirmDialog({
+          message: "Konfirmasi Restore",
+          description: "Mengembalikan data dari file JSON akan menimpa/menambah data saat ini. Apakah Anda yakin?",
+          onConfirm: async () => {
+            showModal("MEMPROSES", "Sedang mengembalikan data...", "success", true);
+            let done = 0;
+            let total = (data.submissions?.length || 0) + (data.attendanceLogs?.length || 0) + (data.confirmations?.length || 0) + (data.trashRecords?.length || 0);
+            
+            if(total === 0) {
+                showModal("BERHASIL", "Tidak ada data yang direstore.", "success");
+                return;
+            }
+
+            if(data.submissions) {
+              for (let sub of data.submissions) {
+                const id = sub.id;
+                const subData = {...sub};
+                delete subData.id;
+                await setDoc(doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar", id), subData);
+                done++;
+                setModalProgress((done/total)*100);
+              }
+            }
+            if(data.attendanceLogs) {
+               for (let item of data.attendanceLogs) {
+                  const id = item.id;
+                  const itemData = {...item};
+                  delete itemData.id;
+                  await setDoc(doc(db, "attendanceLogs", id), itemData);
+                  done++;
+                  setModalProgress((done/total)*100);
+               }
+            }
+            if(data.confirmations) {
+               for (let item of data.confirmations) {
+                  const id = item.id;
+                  const itemData = {...item};
+                  delete itemData.id;
+                  await setDoc(doc(db, "confirmations", id), itemData);
+                  done++;
+                  setModalProgress((done/total)*100);
+               }
+            }
+            if(data.trashRecords) {
+               for (let item of data.trashRecords) {
+                  const id = item.id;
+                  const itemData = {...item};
+                  delete itemData.id;
+                  await setDoc(doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar_trash", id), itemData);
+                  done++;
+                  setModalProgress((done/total)*100);
+               }
+            }
+            showModal("BERHASIL", "Data berhasil dikembalikan dari backup JSON.", "success");
+          }
+        });
+      } catch(err) {
+        showModal("ERROR", "File JSON tidak valid.", "error");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -108,6 +206,20 @@ export function AdminTab({
         }
       }
     });
+  };
+
+  const changeActiveEvent = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    try {
+      await setDoc(
+        doc(db, "artifacts", CUSTOM_APP_ID, "public", "settings"),
+        { activeEventId: val },
+        { merge: true },
+      );
+    } catch (e: any) {
+      console.error(e);
+      showModal("ERROR", e.message, "error");
+    }
   };
 
   const flattenedRows = useMemo(() => {
@@ -182,6 +294,30 @@ export function AdminTab({
             const group = groups[docId];
             const fullData = submissions.find((x) => x.id === docId);
             if (!fullData) continue;
+            
+            // Back up deleted lines individually
+            for (const idx of group.indices) {
+              const rowData = flattenedRows.find(r => r.id === docId && r.i === idx);
+              if (rowData) {
+                await setDoc(doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar_trash", `${docId}_${idx}_${Date.now()}`), {
+                  deletedAt: new Date().toISOString(),
+                  originalId: docId,
+                  originalIndex: idx,
+                  originalKategori: rowData.kategori || fullData.kategori,
+                  originalBranch: rowData.branch || fullData.nama_cabang,
+                  name: rowData.name,
+                  jabatan: rowData.jabatan,
+                  jk: rowData.jk,
+                  wa: rowData.wa,
+                  kaos: (fullData as any)[`p${idx}_kaos`] || "",
+                  foto: rowData.foto || "",
+                  komisi: rowData.kom,
+                  room_override: (fullData as any)[`p${idx}_room_override`] || "",
+                  fullData: fullData, // Entire snapshot of submission
+                });
+              }
+            }
+
             let totalParticipantsInDoc = 0;
             for (let i = 1; i <= 4; i++)
               if ((fullData as any)[`p${i}_nama`]) totalParticipantsInDoc++;
@@ -351,6 +487,28 @@ export function AdminTab({
     link.click();
   };
 
+  const handleWhatsApp = async (r: FlatAdminRow, waMsg: string) => {
+    const waUrl = `https://wa.me/${formatWA(r.wa)}?text=${waMsg}`;
+    // Buka tab / window baru di awal (synchronous) untuk menghindari pemblokiran Popup Blocker dari browser
+    const newWindow = window.open('', '_blank');
+
+    try {
+      showModal("MEMPROSES", "Menyiapkan dan mengunduh gambar ID Card...", "success", true);
+      await downloadCardImg(r);
+      
+      showModal("BERHASIL", "Gambar terunduh. Silakan lampirkan gambar secara manual di WhatsApp Web.", "success");
+      
+      if (newWindow) {
+        newWindow.location.href = waUrl;
+      } else {
+        window.location.href = waUrl; // fallback jika pop-up terblokir penuh
+      }
+    } catch (e) {
+      if (newWindow) newWindow.close();
+      showModal("GAGAL", "Gagal memproses gambar WhatsApp.", "error");
+    }
+  };
+
   const handlePreview = async (r: FlatAdminRow) => {
     const d = await drawSingleCard(
       r.name,
@@ -367,18 +525,18 @@ export function AdminTab({
       className="space-y-6 fade-in"
       onClick={() => setActiveRowActions(null)}
     >
-      <div className="bg-white p-6 rounded-lg border shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="w-full md:w-auto flex items-center gap-3">
-          <h2 className="text-xl font-black text-slate-800 uppercase">
+      <div className="bg-white p-4 md:p-6 rounded-lg border shadow-sm flex flex-col xl:flex-row justify-between items-center gap-4">
+        <div className="w-full xl:w-auto flex flex-wrap items-center justify-center xl:justify-start gap-3">
+          <h2 className="text-xl font-black text-slate-800 uppercase w-full sm:w-auto text-center sm:text-left">
             Database
           </h2>
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded px-2 py-1">
+          <div className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-full sm:w-auto">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari data..."
-              className="px-2 py-1 text-xs focus:outline-none bg-transparent w-36 font-bold"
+              className="px-2 py-1 text-xs focus:outline-none bg-transparent w-full sm:w-36 font-bold"
             />
             <span className="text-[9px] font-black text-slate-400 uppercase bg-white border border-slate-100 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
               {flattenedRows.length} DATA
@@ -387,7 +545,7 @@ export function AdminTab({
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="px-3 py-2 border border-slate-300 rounded text-[10px] focus:ring-2 focus:ring-red-500 outline-none bg-slate-50 font-bold uppercase cursor-pointer"
+            className="w-full sm:w-auto px-3 py-2 border border-slate-300 rounded text-[10px] focus:ring-2 focus:ring-red-500 outline-none bg-slate-50 font-bold uppercase cursor-pointer"
           >
             <option value="">SEMUA KATEGORI</option>
             <option value="PESERTA CABANG">PESERTA CABANG</option>
@@ -395,32 +553,34 @@ export function AdminTab({
             <option value="PENINJAU">PENINJAU</option>
           </select>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 p-1.5 bg-slate-50 border border-slate-100 rounded-xl">
+        <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4 w-full xl:w-auto">
+          <div className="flex flex-wrap justify-center items-center gap-1.5 p-1.5 bg-slate-50 border border-slate-100 rounded-xl w-full md:w-auto">
             {selectedRows.size > 0 && (
-              <button
-                onClick={handleBulkDelete}
-                className="h-9 px-3 flex items-center gap-2 rounded-lg bg-white border border-rose-100 text-rose-600 hover:bg-rose-50 transition-all shadow-sm tooltip-container"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
+              <>
+                <button
+                  onClick={handleBulkDelete}
+                  className="h-9 px-3 flex items-center gap-2 rounded-lg bg-white border border-rose-100 text-rose-600 hover:bg-rose-50 transition-all shadow-sm tooltip-container"
                 >
-                  <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span className="text-[10px] font-bold uppercase tracking-wider">
-                  Hapus
-                </span>
-                <span className="w-5 h-5 flex items-center justify-center bg-rose-600 text-white text-[9px] font-black rounded-full leading-none">
-                  {selectedRows.size}
-                </span>
-                <span className="tooltip-text" style={{ width: "auto" }}>
-                  Hapus Terpilih
-                </span>
-              </button>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span className="text-[10px] font-bold uppercase tracking-wider hidden md:block">
+                    Hapus
+                  </span>
+                  <span className="w-5 h-5 flex items-center justify-center bg-rose-600 text-white text-[9px] font-black rounded-full leading-none">
+                    {selectedRows.size}
+                  </span>
+                  <span className="tooltip-text" style={{ width: "auto" }}>
+                    Hapus Terpilih
+                  </span>
+                </button>
+              </>
             )}
             <button
               onClick={() =>
@@ -470,6 +630,51 @@ export function AdminTab({
               </span>
             </button>
             <button
+              onClick={handleBackupJSON}
+              className="h-9 w-9 flex items-center justify-center rounded-lg bg-white border border-blue-200 text-blue-600 hover:bg-blue-50 transition-all shadow-sm tooltip-container"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 12l-4 4-4-4" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4" />
+              </svg>
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Backup Data as JSON
+              </span>
+            </button>
+             <button
+              onClick={() => fileInputRef.current?.click()}
+              className="h-9 w-9 flex items-center justify-center rounded-lg bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 transition-all shadow-sm tooltip-container"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 8l-4-4-4 4" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16" />
+              </svg>
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Restore Data from JSON
+              </span>
+            </button>
+            <input
+              type="file"
+              accept="application/json"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleRestoreJSON}
+            />
+            <button
               onClick={toggleRegistration}
               className={`h-9 px-3 flex items-center gap-2 rounded-lg border transition-all shadow-sm tooltip-container ${isRegistrationOpen ? "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100" : "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"}`}
             >
@@ -480,9 +685,46 @@ export function AdminTab({
                 Status Pendaftaran
               </span>
             </button>
+            <div className="tooltip-container relative flex items-center">
+              <select
+                value={activeEventId}
+                onChange={changeActiveEvent}
+                className="h-9 px-3 pr-8 rounded-lg border border-slate-200 bg-white text-slate-700 text-[10px] font-bold uppercase outline-none shadow-sm cursor-pointer hover:border-slate-300 appearance-none max-w-[120px] md:max-w-[200px]"
+              >
+                <option value="">(Tutup Confirm)</option>
+                {EVENT_AGENDA.map(a => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Event Kuorum Aktif
+              </span>
+            </div>
           </div>
-          <button
-            onClick={logout}
+          <div className="flex justify-center items-center gap-1.5 p-1.5 w-full md:w-auto">
+            <button
+              onClick={() => setShowTrashModal(true)}
+              className="h-9 w-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50 transition-all shadow-sm tooltip-container relative"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              {trashRecords && trashRecords.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-orange-500 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-sm">
+                  {trashRecords.length}
+                </span>
+              )}
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Arsip Terhapus
+              </span>
+            </button>
+            <button
+              onClick={logout}
             className="h-9 w-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-900 transition-all shadow-sm tooltip-container"
           >
             <svg
@@ -502,6 +744,7 @@ export function AdminTab({
               Keluar Admin
             </span>
           </button>
+          </div>
         </div>
       </div>
 
@@ -636,7 +879,7 @@ export function AdminTab({
               const isActionActiveN = activeRowActions === `n_${r.id}_${r.i}`;
               const isActionActiveT = activeRowActions === `t_${r.id}_${r.i}`;
               const waMsg = encodeURIComponent(
-                `Yth. \n${r.jk === "LAKI-LAKI" ? "Bapak" : "Ibu"} *${toProperCase(r.name)}*,\n\nKami sampaikan bahwa ...\n\nDemikian, harap maklum.\n\n------------\nAdmin Konkerkab-1\n------------`,
+                `Yth. \n${r.jk === "LAKI-LAKI" ? "Bapak" : "Ibu"} *${toProperCase(r.name)}*,\n\nBersama pesan ini, kami bermaksud melampirkan ID Card / Bukti Pendaftaran acara Konkerkab 1 milik ${r.jk === "LAKI-LAKI" ? "Bapak" : "Ibu"}.\n\nDemikian, harap maklum.\n\n------------\nAdmin Konkerkab 1\n------------`,
               );
 
               return (
@@ -691,6 +934,27 @@ export function AdminTab({
                     </div>
                     {isActionActiveN && (
                       <div className="absolute inset-0 bg-white/95 z-40 flex flex-row items-center justify-evenly px-1 border-x border-slate-100 transition-all">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleWhatsApp(r, waMsg);
+                          }}
+                          className="p-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200 transition-all hover:scale-110 tooltip-container cursor-pointer flex items-center justify-center"
+                        >
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.487-1.761-1.66-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                          </svg>
+                          <span
+                            className="tooltip-text"
+                            style={{ width: "auto" }}
+                          >
+                            Kirim WhatsApp
+                          </span>
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1345,8 +1609,7 @@ export function AdminTab({
                   </div>
                   <div
                     onClick={() => {
-                      setShowExportModal(false);
-                      executeKuorumPDF(flattenedRows, attendanceLogs, confirmations);
+                      setExportSubMenu("kuorum");
                     }}
                     className="export-option-card group tooltip-container"
                   >
@@ -1428,7 +1691,7 @@ export function AdminTab({
                   </div>
                 </div>
               </>
-            ) : (
+            ) : exportSubMenu === "scan" ? (
               <>
                 <div className="text-center mb-6">
                   <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">
@@ -1441,28 +1704,57 @@ export function AdminTab({
                 <div className="grid grid-cols-2 gap-3 w-full">
                   <button
                     onClick={() => {
+                      const hasData = attendanceLogs.length > 0;
+                      if (!hasData) {
+                        showModal("BELUM ADA DATA", "Belum ada presensi yang masuk.", "error");
+                        return;
+                      }
                       setShowExportModal(false);
                       executeScannedResultPDF(flattenedRows, attendanceLogs, showModal);
+                      showModal("BERHASIL", "Hasil scan semua kegiatan sedang diproses.", "success");
                     }}
-                    className="col-span-2 group relative border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold text-sm py-3 px-4 rounded-xl shadow-[0_4px_0_0_#34d399] active:shadow-[0_0px_0_0_#34d399] active:translate-y-1 transition-all"
+                    className={`col-span-2 group relative border font-bold text-sm py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 ${attendanceLogs.length > 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[0_4px_0_0_#34d399] active:shadow-[0_0px_0_0_#34d399] active:translate-y-1 hover:brightness-95 cursor-pointer" : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-70"}`}
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-                      Semua Kegiatan (Gabung)
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                    Semua Kegiatan (Gabung)
+                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                      <span className="block px-2 py-1 text-xs text-white bg-slate-800 rounded shadow-md font-normal">
+                        {attendanceLogs.length > 0 ? "Unduh Semua Kegiatan" : "Belum Ada Data Scan Masuk"}
+                      </span>
+                      <div className="w-2 h-2 mx-auto rotate-45 -mt-1 bg-slate-800"></div>
                     </div>
                   </button>
-                  {EVENT_AGENDA.map((ev) => (
-                    <button
-                      key={ev.id}
-                      onClick={() => {
-                        setShowExportModal(false);
-                        executeScannedResultPDF(flattenedRows, attendanceLogs, showModal, ev.id);
-                      }}
-                      className="group relative border border-slate-200 bg-slate-50 text-slate-700 font-bold text-[11px] py-2.5 px-2 rounded-xl shadow-[0_4px_0_0_#cbd5e1] active:shadow-[0_0px_0_0_#cbd5e1] active:translate-y-1 transition-all hover:border-emerald-200 hover:text-emerald-700 hover:bg-emerald-50 hover:shadow-[0_4px_0_0_#34d399] flex items-center justify-center text-center"
-                    >
-                      {ev.name}
-                    </button>
-                  ))}
+                  {EVENT_AGENDA.map((ev) => {
+                    const isKomisi = ev.id === "komisi";
+                    const hasData = attendanceLogs.some(l => l.eventId === ev.id);
+                    return (
+                      <button
+                        key={ev.id}
+                        onClick={() => {
+                          if (!hasData && !isKomisi) {
+                            showModal("BELUM ADA DATA", `Belum ada data scan untuk ${ev.name}.`, "error");
+                            return;
+                          }
+                          if (isKomisi) {
+                            setExportSubMenu("scan_komisi");
+                            return;
+                          }
+                          setShowExportModal(false);
+                          executeScannedResultPDF(flattenedRows, attendanceLogs, showModal, ev.id);
+                          showModal("BERHASIL", `Hasil scan ${ev.name} sedang diproses.`, "success");
+                        }}
+                        className={`group relative border font-bold text-[11px] py-2.5 px-2 rounded-xl transition-all flex items-center justify-center text-center ${hasData || isKomisi ? "border-slate-200 bg-slate-50 text-slate-700 shadow-[0_4px_0_0_#cbd5e1] active:shadow-[0_0px_0_0_#cbd5e1] active:translate-y-1 hover:border-emerald-200 hover:text-emerald-700 hover:bg-emerald-50 hover:shadow-[0_4px_0_0_#34d399] cursor-pointer" : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-70"}`}
+                      >
+                        {ev.name}
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                          <span className="block px-2 py-1 text-xs text-white bg-slate-800 rounded shadow-md font-normal">
+                            {hasData || isKomisi ? `Unduh ${ev.name}` : "Belum Ada Data Scan"}
+                          </span>
+                          <div className="w-2 h-2 mx-auto rotate-45 -mt-1 bg-slate-800"></div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
                 <div className="mt-6 flex justify-center">
                   <button
@@ -1476,7 +1768,162 @@ export function AdminTab({
                   </button>
                 </div>
               </>
-            )}
+            ) : exportSubMenu === "scan_komisi" ? (
+              <>
+                <div className="text-center mb-6">
+                  <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                    Hasil Scan Sidang Komisi
+                  </h2>
+                  <p className="text-slate-400 text-[8px] font-bold uppercase mt-1 tracking-widest">
+                    Pilih komisi
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  {["KOMISI A", "KOMISI B", "KOMISI C", "KOMISI D"].map((komName) => {
+                    const hasData = attendanceLogs.some(l => l.eventId === "komisi" && flattenedRows.find(r => `${r.id}-${r.i}` === l.participantId)?.kom === komName);
+                    return (
+                      <button
+                        key={komName}
+                        onClick={() => {
+                          if (!hasData) {
+                            showModal("BELUM ADA DATA", `Belum ada data scan untuk ${komName}.`, "error");
+                            return;
+                          }
+                          setShowExportModal(false);
+                          executeScannedResultPDF(flattenedRows, attendanceLogs, showModal, "komisi", komName);
+                          showModal("BERHASIL", `Hasil scan ${komName} sedang diproses.`, "success");
+                        }}
+                        className={`group relative border font-bold text-[11px] py-2.5 px-2 rounded-xl transition-all flex items-center justify-center text-center ${hasData ? "border-slate-200 bg-slate-50 text-slate-700 shadow-[0_4px_0_0_#cbd5e1] active:shadow-[0_0px_0_0_#cbd5e1] active:translate-y-1 hover:border-emerald-200 hover:text-emerald-700 hover:bg-emerald-50 hover:shadow-[0_4px_0_0_#34d399] cursor-pointer" : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-70"}`}
+                      >
+                        {komName}
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                          <span className="block px-2 py-1 text-xs text-white bg-slate-800 rounded shadow-md font-normal">
+                            {hasData ? `Unduh ${komName}` : "Belum Ada Data Scan"}
+                          </span>
+                          <div className="w-2 h-2 mx-auto rotate-45 -mt-1 bg-slate-800"></div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={() => setExportSubMenu("scan")}
+                    className="text-xs text-slate-400 hover:text-slate-700 font-medium transition flex items-center justify-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Kembali
+                  </button>
+                </div>
+              </>
+            ) : exportSubMenu === "kuorum" ? (
+              <>
+                <div className="text-center mb-6">
+                  <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                    Laporan Kuorum
+                  </h2>
+                  <p className="text-slate-400 text-[8px] font-bold uppercase mt-1 tracking-widest">
+                    Pilih kegiatan sidang
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  {EVENT_AGENDA.map((ev) => {
+                    const isKomisi = ev.id === "komisi";
+                    const hasData = confirmations.some(c => c.eventId === ev.id) || attendanceLogs.some(l => l.eventId === ev.id);
+                    return (
+                      <button
+                        key={ev.id}
+                        onClick={() => {
+                          if (!hasData && !isKomisi) {
+                            showModal("BELUM ADA DATA", `Belum ada isian masuk untuk ${ev.name}.`, "error");
+                            return;
+                          }
+                          if (isKomisi) {
+                            setExportSubMenu("kuorum_komisi");
+                            return;
+                          }
+                          setShowExportModal(false);
+                          executeKuorumPDF(flattenedRows, attendanceLogs, confirmations, ev.id);
+                          showModal("BERHASIL", `Laporan Kuorum ${ev.name} berhasil diunduh.`, "success");
+                        }}
+                        className={`group relative border font-bold text-[11px] py-2.5 px-2 rounded-xl transition-all flex items-center justify-center text-center ${hasData || isKomisi ? "border-slate-200 bg-slate-50 text-slate-700 shadow-[0_4px_0_0_#cbd5e1] active:shadow-[0_0px_0_0_#cbd5e1] active:translate-y-1 hover:border-indigo-200 hover:text-indigo-700 hover:bg-indigo-50 hover:shadow-[0_4px_0_0_#6366f1] cursor-pointer" : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-70"}`}
+                      >
+                        {ev.name}
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                          <span className="block px-2 py-1 text-xs text-white bg-slate-800 rounded shadow-md font-normal">
+                            {hasData || isKomisi ? `Unduh Kuorum ${ev.name}` : "Belum Ada Isian Konfirmasi/Scan"}
+                          </span>
+                          <div className="w-2 h-2 mx-auto rotate-45 -mt-1 bg-slate-800"></div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={() => setExportSubMenu("main")}
+                    className="text-xs text-slate-400 hover:text-slate-700 font-medium transition flex items-center justify-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Kembali
+                  </button>
+                </div>
+              </>
+            ) : exportSubMenu === "kuorum_komisi" ? (
+              <>
+                <div className="text-center mb-6">
+                  <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                    Laporan Kuorum Sidang Komisi
+                  </h2>
+                  <p className="text-slate-400 text-[8px] font-bold uppercase mt-1 tracking-widest">
+                    Pilih komisi
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  {["KOMISI A", "KOMISI B", "KOMISI C", "KOMISI D"].map((komName) => {
+                    const hasData = confirmations.some(c => c.eventId === "komisi" && flattenedRows.find(r => `${r.id}-${r.i}` === c.participantId)?.kom === komName) || attendanceLogs.some(l => l.eventId === "komisi" && flattenedRows.find(r => `${r.id}-${r.i}` === l.participantId)?.kom === komName);
+                    return (
+                      <button
+                        key={komName}
+                        onClick={() => {
+                          if (!hasData) {
+                            showModal("BELUM ADA DATA", `Belum ada isian masuk untuk ${komName}.`, "error");
+                            return;
+                          }
+                          setShowExportModal(false);
+                          executeKuorumPDF(flattenedRows, attendanceLogs, confirmations, "komisi", komName);
+                          showModal("BERHASIL", `Laporan Kuorum ${komName} berhasil diunduh.`, "success");
+                        }}
+                        className={`group relative border font-bold text-[11px] py-2.5 px-2 rounded-xl transition-all flex items-center justify-center text-center ${hasData ? "border-slate-200 bg-slate-50 text-slate-700 shadow-[0_4px_0_0_#cbd5e1] active:shadow-[0_0px_0_0_#cbd5e1] active:translate-y-1 hover:border-indigo-200 hover:text-indigo-700 hover:bg-indigo-50 hover:shadow-[0_4px_0_0_#6366f1] cursor-pointer" : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-70"}`}
+                      >
+                        {komName}
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                          <span className="block px-2 py-1 text-xs text-white bg-slate-800 rounded shadow-md font-normal">
+                            {hasData ? `Unduh Kuorum ${komName}` : "Belum Ada Isian Konfirmasi/Scan"}
+                          </span>
+                          <div className="w-2 h-2 mx-auto rotate-45 -mt-1 bg-slate-800"></div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={() => setExportSubMenu("kuorum")}
+                    className="text-xs text-slate-400 hover:text-slate-700 font-medium transition flex items-center justify-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Kembali
+                  </button>
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
       )}
@@ -1547,7 +1994,7 @@ export function AdminTab({
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Jabatan / Utusan</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Jabatan/Utusan</label>
                     <input 
                       type="text" 
                       value={editForm.jabatan} 
@@ -1638,6 +2085,107 @@ export function AdminTab({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTrashModal && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 z-[60]">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-4 flex justify-between items-center text-white shrink-0">
+              <h3 className="font-black text-lg flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                Arsip Terhapus ({trashRecords.length})
+              </h3>
+              <button
+                onClick={() => setShowTrashModal(false)}
+                className="hover:bg-white/20 p-1 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-0 bg-slate-50 overflow-y-auto grow">
+              {trashRecords.length === 0 ? (
+                <div className="p-12 flex flex-col items-center justify-center text-slate-400">
+                  <svg className="w-16 h-16 mb-4 opacity-50 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <p className="font-bold">Tempat sampah kosong.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {trashRecords.map((t) => (
+                    <div key={t.id} className="p-4 flex items-center justify-between hover:bg-white transition-colors">
+                      <div>
+                        <p className="font-black text-slate-800 text-sm">{t.name || "Tanpa Nama"}</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">
+                          {t.originalKategori} {t.originalBranch && `• ${t.originalBranch}`}
+                        </p>
+                        <p className="text-[9px] text-slate-400 mt-1">Dihapus pada: {new Date(t.deletedAt).toLocaleString('id-ID')}</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            showModal("MEMPROSES", "Mengembalikan data...", "success");
+                            const docRef = doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar", t.originalId);
+                            const updateData: any = {
+                              [`p${t.originalIndex}_nama`]: t.name || "",
+                              [`p${t.originalIndex}_jabatan`]: t.jabatan || "",
+                              [`p${t.originalIndex}_jk`]: t.jk || "",
+                              [`p${t.originalIndex}_wa`]: t.wa || "",
+                              [`p${t.originalIndex}_kaos`]: t.kaos || "",
+                              [`p${t.originalIndex}_foto`]: t.foto || "",
+                              [`p${t.originalIndex}_room_override`]: t.room_override || "",
+                              [`p${t.originalIndex}_komisi`]: t.komisi || "",
+                            };
+
+                            let needToSetDoc = false;
+                            try {
+                              await updateDoc(docRef, updateData);
+                            } catch (e: any) {
+                              needToSetDoc = true;
+                            }
+
+                            if (needToSetDoc) {
+                              // If doc couldn't be updated, fall back to setting the whole fullData again
+                              await setDoc(docRef, t.fullData);
+                            }
+
+                            await deleteDoc(doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar_trash", t.id));
+                            showModal("BERHASIL", "Data berhasil dikembalikan.", "success");
+                          } catch (e: any) {
+                            showModal("GAGAL", e.message, "error");
+                          }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-[10px] font-bold uppercase transition-colors shrink-0 tooltip-container"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Restore
+                        <span className="tooltip-text" style={{ width: "auto" }}>
+                          Kembalikan Data
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
+              <button
+                onClick={() => setShowTrashModal(false)}
+                className="px-6 py-2.5 rounded-lg border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors uppercase text-xs"
+              >
+                Tutup
               </button>
             </div>
           </div>

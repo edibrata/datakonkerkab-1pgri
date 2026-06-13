@@ -9,6 +9,8 @@ export const useFirebaseData = () => {
   const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
   const [confirmations, setConfirmations] = useState<any[]>([]);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
+  const [activeEventId, setActiveEventId] = useState<string>("");
+  const [trashRecords, setTrashRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,6 +58,22 @@ export const useFirebaseData = () => {
       setConfirmations(confs);
     });
 
+    const trashRef = collection(
+      db,
+      "artifacts",
+      CUSTOM_APP_ID,
+      "public",
+      "data",
+      "pendaftar_trash",
+    );
+    const unsubTrash = onSnapshot(trashRef, (snapshot) => {
+      const data: any[] = [];
+      snapshot.forEach((doc) => {
+        data.push({ ...doc.data(), id: doc.id });
+      });
+      setTrashRecords(data);
+    });
+
     const settingsRef = doc(
       db,
       "artifacts",
@@ -65,9 +83,12 @@ export const useFirebaseData = () => {
     );
     const unsubSettings = onSnapshot(settingsRef, (snapshot) => {
       if (snapshot.exists()) {
-        setIsRegistrationOpen(snapshot.data().isOpen);
+        const data = snapshot.data();
+        setIsRegistrationOpen(data.isOpen ?? true);
+        setActiveEventId(data.activeEventId || "");
       } else {
         setIsRegistrationOpen(true);
+        setActiveEventId("");
       }
     });
 
@@ -75,9 +96,10 @@ export const useFirebaseData = () => {
       unsubPendaftar();
       unsubLogs();
       unsubConf();
+      unsubTrash();
       unsubSettings();
     };
   }, []);
 
-  return { submissions, attendanceLogs, confirmations, isRegistrationOpen, loading };
+  return { submissions, attendanceLogs, confirmations, trashRecords, isRegistrationOpen, activeEventId, loading };
 };

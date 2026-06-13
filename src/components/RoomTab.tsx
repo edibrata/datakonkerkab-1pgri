@@ -210,7 +210,7 @@ export function RoomTab({ submissions }: Props) {
           <div className="relative z-10 text-center mb-6 md:mb-8">
             <div className="flex justify-center mb-4">
               <img
-                src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
+                src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official.png?raw=true"
                 alt="Logo PGRI"
                 referrerPolicy="no-referrer"
                 className="h-16 md:h-20 w-auto object-contain drop-shadow-md select-none pointer-events-none"
@@ -270,7 +270,7 @@ export function RoomTab({ submissions }: Props) {
                     <div className="p-2 space-y-1">
                       <div className="px-3.5 py-2 border-b border-slate-50 mb-1 flex items-center justify-between bg-slate-50/50">
                         <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Delegasi Ditemukan</span>
-                        <span className="text-[10px] font-black text-slate-400 bg-slate-100/80 px-2 py-0.5 rounded-full">{Math.min(10, flattenedRows.length)} / {flattenedRows.length}</span>
+                        <span className="text-[10px] font-black text-slate-400 bg-slate-100/80 px-2 py-0.5 rounded-full">{Math.min(10, flattenedRows.length)}/{flattenedRows.length}</span>
                       </div>
                       
                       {flattenedRows.slice(0, 10).map((r, idx) => (
@@ -337,7 +337,7 @@ export function RoomTab({ submissions }: Props) {
           {/* Info Badge Container */}
           <div className="mt-6 bg-gradient-to-r from-red-50/25 to-blue-50/15 rounded-2xl p-3 md:py-3.5 md:px-5 border border-slate-100 max-w-lg mx-auto text-center shadow-[0_1px_4px_rgba(0,0,0,0.015)]">
             <p className="text-[11px] md:text-xs leading-relaxed text-slate-600 font-medium">
-              Cari data delegasi, cek alokasi penginapan dan nomor kamar, serta temukan rekan sekamar Anda dengan mudah dan cepat.
+              Lihat data, cek nomor kamar penginapan, serta temukan rekan sekamar Anda dengan mudah dan cepat.
             </p>
           </div>
         </motion.div>
@@ -374,7 +374,7 @@ export function RoomTab({ submissions }: Props) {
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100/80">
                 <div className="flex items-center gap-2">
                   <img
-                    src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official%20Full.png?raw=true"
+                    src="https://github.com/edibrata/image/blob/main/Logo%20PGRI%20Official.png?raw=true"
                     alt="Logo Mini"
                     referrerPolicy="no-referrer"
                     className="h-6 w-auto object-contain filter grayscale opacity-80"

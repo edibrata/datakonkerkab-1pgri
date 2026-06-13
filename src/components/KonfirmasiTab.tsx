@@ -9,10 +9,11 @@ import { CheckCircle2, Search, CalendarCheck } from "lucide-react";
 interface Props {
   submissions: SubmissionData[];
   confirmations: any[];
+  activeEventId: string;
   showModal: (title: string, message: string, type: "success" | "error") => void;
 }
 
-export function KonfirmasiTab({ submissions, confirmations, showModal }: Props) {
+export function KonfirmasiTab({ submissions, confirmations, activeEventId, showModal }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const flattenedRows = getFlattenedRows(submissions);
 
@@ -23,7 +24,7 @@ export function KonfirmasiTab({ submissions, confirmations, showModal }: Props) 
       (p.kategori && p.kategori.toLowerCase().includes(searchTerm.toLowerCase()))
   ).slice(0, 50);
 
-  const agendas = EVENT_AGENDA.filter((e) => e.id === "pleno_1");
+  const activeEvent = EVENT_AGENDA.find((e) => e.id === activeEventId);
 
   const toggleConfirmation = async (participantId: string, eventId: string, isConfirmed: boolean) => {
     const docId = `${participantId}-${eventId}`;
@@ -50,18 +51,31 @@ export function KonfirmasiTab({ submissions, confirmations, showModal }: Props) 
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl shadow-sm border border-indigo-100 p-6 md:p-8 text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-          <CalendarCheck className="w-32 h-32 text-indigo-500" />
+      <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl md:rounded-2xl shadow-sm border border-indigo-100 px-4 py-5 md:p-6 text-center relative overflow-hidden flex flex-col items-center">
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-4 p-4 opacity-[0.06] pointer-events-none">
+          <CalendarCheck className="w-28 h-28 md:w-36 md:h-36 text-indigo-900" />
         </div>
-        <h2 className="text-2xl md:text-3xl font-black text-indigo-900 uppercase tracking-tight mb-2">
-          Konfirmasi Kehadiran (Kuorum) - Sidang Pleno I
-        </h2>
-        <p className="text-indigo-700 font-medium text-sm md:text-base max-w-2xl mx-auto">
-          Bantu Panitia memastikan kuorum untuk Sidang Pleno I. Konfirmasi kehadiran Anda di bawah ini sebelum proses scan barcode di ruangan dimulai.
-        </p>
+        <div className="relative z-10 w-full max-w-lg mx-auto">
+          <h2 className="text-[15px] sm:text-xl md:text-2xl font-black text-indigo-900 uppercase tracking-tight mb-1.5 md:mb-2 leading-tight">
+            Konfirmasi Kehadiran (Kuorum)
+            {activeEvent ? <span className="block mt-1">{`— ${activeEvent.name} —`}</span> : ""}
+          </h2>
+          <p className="text-indigo-700/80 font-bold text-[10.5px] sm:text-xs md:text-sm leading-snug md:leading-normal px-2">
+            {activeEvent ? 
+              `Bantu Panitia memastikan kuorum untuk ${activeEvent.name}. Konfirmasi kehadiran Anda di bawah ini sebelum proses scan barcode di ruangan dimulai.` 
+              : "Menu konfirmasi kehadiran saat ini belum dibuka oleh panitia."
+            }
+          </p>
+        </div>
       </div>
 
+      {!activeEvent ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 text-center">
+          <CalendarCheck className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-black text-slate-700 uppercase">Belum Ada Sesi Aktif</h3>
+          <p className="text-slate-500 text-sm mt-2">Silakan tunggu arahan dari pimpinan sidang atau panitia.</p>
+        </div>
+      ) : (
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 text-left">
         <div className="relative mb-6">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -101,8 +115,9 @@ export function KonfirmasiTab({ submissions, confirmations, showModal }: Props) 
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                    {agendas.map((agenda) => {
+                  <div className="mt-2">
+                    {(() => {
+                      const agenda = activeEvent;
                       const isConfirmed = confirmations.some(
                         (c) => c.participantId === fullPid && c.eventId === agenda.id
                       );
@@ -111,17 +126,17 @@ export function KonfirmasiTab({ submissions, confirmations, showModal }: Props) 
                         <button
                           key={agenda.id}
                           onClick={() => toggleConfirmation(fullPid, agenda.id, isConfirmed)}
-                          className={`flex items-center justify-between px-3 py-2 border rounded-lg text-[10px] font-bold uppercase transition-all ${
+                          className={`w-full flex items-center justify-between px-3 py-3 border rounded-lg text-xs font-bold uppercase transition-all ${
                             isConfirmed
-                              ? "bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                              ? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm"
                               : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
                           }`}
                         >
                           <span>{agenda.name}</span>
-                          <CheckCircle2 className={`w-4 h-4 ${isConfirmed ? "text-indigo-600" : "text-slate-300"}`} />
+                          <CheckCircle2 className={`w-5 h-5 ${isConfirmed ? "text-indigo-600" : "text-slate-300"}`} />
                         </button>
                       );
-                    })}
+                    })()}
                   </div>
                 </div>
               );
@@ -129,6 +144,7 @@ export function KonfirmasiTab({ submissions, confirmations, showModal }: Props) 
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

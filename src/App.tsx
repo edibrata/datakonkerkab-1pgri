@@ -14,7 +14,7 @@ const RoomTab = lazy(() => import("./components/RoomTab").then(module => ({ defa
 const AdminLogin = lazy(() => import("./components/AdminLogin").then(module => ({ default: module.AdminLogin })));
 
 export default function App() {
-  const { submissions, attendanceLogs, confirmations, isRegistrationOpen, loading } = useFirebaseData();
+  const { submissions, attendanceLogs, confirmations, trashRecords, isRegistrationOpen, activeEventId, loading } = useFirebaseData();
   const getInitRole = (): "full" | "scanner" | null => {
     const pass = localStorage.getItem("pgri_admin_pass");
     if (pass === "adminpgri") return "full";
@@ -79,10 +79,10 @@ export default function App() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col text-sm">
+    <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col text-sm relative">
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} adminRole={adminRole} />
 
-      <main className="max-w-[96%] mx-auto px-4 py-6 md:py-8 flex-grow w-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex-grow w-full">
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
@@ -146,7 +146,9 @@ export default function App() {
                     submissions={submissions}
                     attendanceLogs={attendanceLogs}
                     confirmations={confirmations}
+                    trashRecords={trashRecords}
                     isRegistrationOpen={isRegistrationOpen}
+                    activeEventId={activeEventId}
                     showModal={showModal}
                     setModalProgress={setModalProgress}
                     onViewPrevew={setPreviewImage}
@@ -180,7 +182,7 @@ export default function App() {
               <RoomTab submissions={submissions} />
             )}
             {activeTab === "konfirmasi" && (
-              <KonfirmasiTab submissions={submissions} confirmations={confirmations} showModal={showModal} />
+              <KonfirmasiTab submissions={submissions} confirmations={confirmations} activeEventId={activeEventId} showModal={showModal} />
             )}
 
             {activeTab === "presensi" && (
