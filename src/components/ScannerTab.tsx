@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { getFirestore, doc, setDoc, getDoc, collection } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -7,12 +7,12 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [scannerActive, setScannerActive] = useState(false);
   const [lastScanResult, setLastScanResult] = useState<any>(null);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
+        scannerRef.current.stop().catch(console.error);
       }
     };
   }, []);
@@ -36,47 +36,56 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
     setLastScanResult(null);
 
     setTimeout(() => {
-      scannerRef.current = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        false
-      );
+      const html5QrCode = new Html5Qrcode("reader");
+      scannerRef.current = html5QrCode;
 
-      scannerRef.current.render(async (decodedText) => {
-        if (scannerRef.current) scannerRef.current.pause();
-        try {
-          const logId = `${selectedEvent}_${decodedText}`;
-          const logRef = doc(collection(db, "attendanceLogs"), logId);
-          const docSnap = await getDoc(logRef);
-          
-          if (docSnap.exists()) {
-            showModal("INFO", `Peserta sudah terdaftar/mengambil bagian untuk kegiatan ini!`, "error");
-            setLastScanResult({ status: 'already_scanned', text: decodedText });
-          } else {
-            await setDoc(logRef, {
-              participantId: decodedText,
-              eventId: selectedEvent,
-              timestamp: new Date().toISOString()
-            });
-            showModal("BERHASIL", `Presensi/Klaim berhasil dicatat!`, "success");
-            setLastScanResult({ status: 'success', text: decodedText });
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        async (decodedText) => {
+          if (scannerRef.current) scannerRef.current.pause(true);
+          try {
+            const logId = `${selectedEvent}_${decodedText}`;
+            const logRef = doc(collection(db, "attendanceLogs"), logId);
+            const docSnap = await getDoc(logRef);
+            
+            if (docSnap.exists()) {
+              showModal("INFO", `Peserta sudah terdaftar/mengambil bagian untuk kegiatan ini!`, "error");
+              setLastScanResult({ status: 'already_scanned', text: decodedText });
+            } else {
+              await setDoc(logRef, {
+                participantId: decodedText,
+                eventId: selectedEvent,
+                timestamp: new Date().toISOString()
+              });
+              showModal("BERHASIL", `Presensi/Klaim berhasil dicatat!`, "success");
+              setLastScanResult({ status: 'success', text: decodedText });
+            }
+          } catch (error: any) {
+            showModal("ERROR", error.message || "Gagal mencatat presensi", "error");
           }
-        } catch (error: any) {
-          showModal("ERROR", error.message || "Gagal mencatat presensi", "error");
+          setTimeout(() => {
+              if (scannerRef.current && scannerActive) scannerRef.current.resume();
+          }, 3000);
+        },
+        (errorMessage) => {
+          // parse error, ignore
         }
-        setTimeout(() => {
-            if (scannerRef.current && scannerActive) scannerRef.current.resume();
-        }, 3000);
-      }, (error) => {
-        // ignore scan failures
+      ).catch((err) => {
+         showModal("ERROR", "Kamera tidak dapat diakses", "error");
+         setScannerActive(false);
       });
     }, 100);
   };
 
   const stopScanner = () => {
     if (scannerRef.current) {
-      scannerRef.current.clear().then(() => {
+      scannerRef.current.stop().then(() => {
         setScannerActive(false);
+        scannerRef.current?.clear();
       }).catch(console.error);
     } else {
       setScannerActive(false);
