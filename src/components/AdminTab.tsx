@@ -58,6 +58,11 @@ export function AdminTab({
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "ts", dir: -1 });
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    description?: string;
+    onConfirm: () => void;
+  } | null>(null);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportSubMenu, setExportSubMenu] = useState<"main" | "scan">("main");
@@ -83,23 +88,23 @@ export function AdminTab({
   };
 
   const toggleRegistration = async () => {
-    if (
-      !confirm(
-        `Ubah status pendaftaran menjadi ${isRegistrationOpen ? "TUTUP" : "BUKA"}?`,
-      )
-    )
-      return;
-    showModal("MEMPROSES", "Mengubah status pendaftaran...", "success");
-    try {
-      await setDoc(
-        doc(db, "artifacts", CUSTOM_APP_ID, "public", "settings"),
-        { isOpen: !isRegistrationOpen },
-        { merge: true },
-      );
-      showModal("BERHASIL", "Status pendaftaran berhasil diubah.", "success");
-    } catch (e: any) {
-      showModal("ERROR", e.message, "error");
-    }
+    setConfirmDialog({
+      message: "Konfirmasi Status",
+      description: `Ubah status pendaftaran menjadi ${isRegistrationOpen ? "TUTUP" : "BUKA"}?`,
+      onConfirm: async () => {
+        showModal("MEMPROSES", "Mengubah status pendaftaran...", "success");
+        try {
+          await setDoc(
+            doc(db, "artifacts", CUSTOM_APP_ID, "public", "settings"),
+            { isOpen: !isRegistrationOpen },
+            { merge: true },
+          );
+          showModal("BERHASIL", "Status pendaftaran berhasil diubah.", "success");
+        } catch (e: any) {
+          showModal("ERROR", e.message, "error");
+        }
+      }
+    });
   };
 
   const flattenedRows = useMemo(() => {
@@ -154,40 +159,43 @@ export function AdminTab({
 
   const handleBulkDelete = async () => {
     if (selectedRows.size === 0) return;
-    if (!confirm(`Hapus ${selectedRows.size} data terpilih?`)) return;
-    showModal("MEMPROSES", "Sedang menghapus data...", "success");
-    try {
-      const groups: Record<string, { cat: string; indices: number[] }> = {};
-      selectedRows.forEach((s) => {
-        const parts = s.split("|");
-        const id = parts[0];
-        const idx = parseInt(parts[1]);
-        const cat = parts[2];
-        if (!groups[id]) groups[id] = { cat, indices: [] };
-        groups[id].indices.push(idx);
-      });
+    setConfirmDialog({
+      message: "Hapus Data",
+      description: `Hapus ${selectedRows.size} data terpilih?`,
+      onConfirm: async () => {
+        showModal("MEMPROSES", "Sedang menghapus data...", "success");
+        try {
+          const groups: Record<string, { cat: string; indices: number[] }> = {};
+          selectedRows.forEach((s) => {
+            const parts = s.split("|");
+            const id = parts[0];
+            const idx = parseInt(parts[1]);
+            const cat = parts[2];
+            if (!groups[id]) groups[id] = { cat, indices: [] };
+            groups[id].indices.push(idx);
+          });
 
-      for (const docId in groups) {
-        const group = groups[docId];
-        const fullData = submissions.find((x) => x.id === docId);
-        if (!fullData) continue;
-        let totalParticipantsInDoc = 0;
-        for (let i = 1; i <= 4; i++)
-          if ((fullData as any)[`p${i}_nama`]) totalParticipantsInDoc++;
-        const isAllChecked = group.indices.length >= totalParticipantsInDoc;
-        const isCollective = group.cat.includes("PESERTA");
-        if (!isCollective || isAllChecked) {
-          await deleteDoc(
-            doc(
-              db,
-              "artifacts",
-              CUSTOM_APP_ID,
-              "public",
-              "data",
-              "pendaftar",
-              docId,
-            ),
-          );
+          for (const docId in groups) {
+            const group = groups[docId];
+            const fullData = submissions.find((x) => x.id === docId);
+            if (!fullData) continue;
+            let totalParticipantsInDoc = 0;
+            for (let i = 1; i <= 4; i++)
+              if ((fullData as any)[`p${i}_nama`]) totalParticipantsInDoc++;
+            const isAllChecked = group.indices.length >= totalParticipantsInDoc;
+            const isCollective = group.cat.includes("PESERTA");
+            if (!isCollective || isAllChecked) {
+              await deleteDoc(
+                doc(
+                  db,
+                  "artifacts",
+                  CUSTOM_APP_ID,
+                  "public",
+                  "data",
+                  "pendaftar",
+                  docId,
+                ),
+              );
         } else {
           const updateObj: any = {};
           group.indices.forEach((idx) => {
@@ -214,11 +222,13 @@ export function AdminTab({
           );
         }
       }
-      showModal("BERHASIL", "Data telah dihapus.", "success");
-      setSelectedRows(new Set());
-    } catch (e: any) {
-      showModal("ERROR", e.message, "error");
-    }
+          showModal("BERHASIL", "Data telah dihapus.", "success");
+          setSelectedRows(new Set());
+        } catch (e: any) {
+          showModal("ERROR", e.message, "error");
+        }
+      }
+    });
   };
 
   const updateRoom = async (id: string, idx: number, val: string) => {
@@ -302,17 +312,21 @@ export function AdminTab({
   };
 
   const resetToken = async (id: string) => {
-    if (confirm("Reset token revisi?")) {
-      await updateDoc(
-        doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar", id),
-        {
-          revision_token: Math.random()
-            .toString(36)
-            .substring(2, 8)
-            .toUpperCase(),
-        },
-      );
-    }
+    setConfirmDialog({
+      message: "Reset Token",
+      description: "Reset token revisi?",
+      onConfirm: async () => {
+        await updateDoc(
+          doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar", id),
+          {
+            revision_token: Math.random()
+              .toString(36)
+              .substring(2, 8)
+              .toUpperCase(),
+          },
+        );
+      }
+    });
   };
 
   const copyToken = (t: string) => {
@@ -927,14 +941,18 @@ export function AdminTab({
                             key={event.id}
                             onClick={async () => {
                               if (hasAttended && logRecord?.id) {
-                                if (window.confirm(`Reset presensi ${event.name} untuk ${r.name}?`)) {
-                                  try {
-                                    await deleteDoc(doc(db, "attendanceLogs", logRecord.id));
-                                  } catch (error) {
-                                    console.error(error);
-                                    showModal("GAGAL", "Gagal mereset presensi.", "error");
+                                setConfirmDialog({
+                                  message: "Reset Presensi",
+                                  description: `Reset presensi ${event.name} untuk ${r.name}?`,
+                                  onConfirm: async () => {
+                                    try {
+                                      await deleteDoc(doc(db, "attendanceLogs", logRecord.id));
+                                    } catch (error) {
+                                      console.error(error);
+                                      showModal("GAGAL", "Gagal mereset presensi.", "error");
+                                    }
                                   }
-                                }
+                                });
                               }
                             }}
                             className={`relative group flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-black shadow-sm transition-all duration-300 ${hasAttended ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 hover:scale-105' : 'bg-slate-50 text-slate-300 border border-slate-100 cursor-default'}`}
@@ -1448,12 +1466,14 @@ export function AdminTab({
               <h3 className="font-black text-lg">REVISI SATUAN (QUICK EDIT)</h3>
               <button
                 onClick={() => setEditingRecord(null)}
-                className="p-1 hover:bg-white/20 rounded-full transition-colors"
-                title="Batal"
+                className="p-1 hover:bg-white/20 rounded-full transition-colors relative group"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
+                <div className="absolute top-full right-0 mt-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-[60]">
+                   Batal
+                </div>
               </button>
             </div>
             
@@ -1597,6 +1617,40 @@ export function AdminTab({
                 Simpan Perubahan
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDialog && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden scale-in-center animate-in zoom-in-95 duration-200">
+             <div className="p-6 text-center">
+                 <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                     </svg>
+                 </div>
+                 <h3 className="text-xl font-bold text-slate-800 mb-2">{confirmDialog.message}</h3>
+                 {confirmDialog.description && <p className="text-sm text-slate-500 mb-6">{confirmDialog.description}</p>}
+                 
+                 <div className="flex gap-3 justify-center mt-2">
+                     <button
+                        onClick={() => setConfirmDialog(null)}
+                        className="px-5 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer text-sm flex-1"
+                     >
+                         Batal
+                     </button>
+                     <button
+                        onClick={() => {
+                            confirmDialog.onConfirm();
+                            setConfirmDialog(null);
+                        }}
+                        className="px-5 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer text-sm flex-1"
+                     >
+                         Ya, Lanjutkan
+                     </button>
+                 </div>
+             </div>
           </div>
         </div>
       )}

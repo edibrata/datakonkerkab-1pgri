@@ -99,33 +99,43 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
           fps: 10,
           qrbox: { width: 250, height: 250 }
         },
-        async (decodedText) => {
+         async (decodedText) => {
           if (scannerRef.current) scannerRef.current.pause(true);
           try {
+            const parts = decodedText.split("-");
+            // Assume the last part after the dash is the participant index
+            const participantIndex = parseInt(parts.pop() || "1");
+            const docId = parts.join("-") || decodedText;
+
+            const subRef = doc(db, "submissions", docId);
+            const subSnap = await getDoc(subRef);
+            if (!subSnap.exists()) {
+               setLastScanResult({ status: 'error', text: `${decodedText} (Tidak Ditemukan)` });
+               showToastAndResume("Data peserta tidak ditemukan!", "error");
+               return;
+            }
+
+            const subData = subSnap.data();
+            const list = Array.isArray(subData.peserta) ? subData.peserta : (subData.peserta?.peserta || []);
+            const getField = (field: string) => {
+               return subData[`p${participantIndex}_${field}`] || (list[participantIndex-1] ? list[participantIndex-1][field] : "") || "";
+            }
+            
+            const komisiPeserta = getField("komisi") || "";
+            const namaPeserta = getField("nama") || "Peserta";
+            const kategoriPeserta = subData.kategori || "";
+
             // Validate Komisi if event is komisi
             if (selectedEvent === "komisi") {
-               const parts = decodedText.split("-");
-               const docId = parts[0];
-               const participantIndex = parseInt(parts[1] || "1");
-
-               const subRef = doc(db, "submissions", docId);
-               const subSnap = await getDoc(subRef);
-               if (!subSnap.exists()) {
-                  setLastScanResult({ status: 'error', text: `${decodedText} (Tidak Ditemukan)` });
-                  showToastAndResume("Data peserta tidak ditemukan!", "error");
+               if (!kategoriPeserta.toUpperCase().includes("PESERTA")) {
+                  setLastScanResult({ status: 'error', text: `${namaPeserta} - Bukan Peserta Utusan` });
+                  showToastAndResume(`Bukan Utusan! (${kategoriPeserta})`, "error");
                   return;
                }
 
-               const subData = subSnap.data();
-               const list = Array.isArray(subData.peserta) ? subData.peserta : (subData.peserta?.peserta || []);
-               const getField = (field: string) => {
-                  return subData[`p${participantIndex}_${field}`] || (list[participantIndex-1] ? list[participantIndex-1][field] : "") || "";
-               }
-               const komisiPeserta = getField("komisi") || "";
-               
-               if (komisiPeserta.toUpperCase() !== selectedKomisiGuard.toUpperCase()) {
-                  setLastScanResult({ status: 'error', text: `Terdaftar di ${komisiPeserta || "-"}` });
-                  showToastAndResume(`SALAH KOMISI! Peserta di ${komisiPeserta || "Lain"}`, "error");
+               if (!komisiPeserta || komisiPeserta.toUpperCase() !== selectedKomisiGuard.toUpperCase()) {
+                  setLastScanResult({ status: 'error', text: `${namaPeserta} -> ${komisiPeserta || "TIDAK ADA KOMISI"}` });
+                  showToastAndResume(`SALAH KOMISI! Seharusnya ${komisiPeserta || "TIDAK ADA"}`, "error");
                   return;
                }
             }
@@ -135,16 +145,17 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
             const docSnap = await getDoc(logRef);
             
             if (docSnap.exists()) {
-              setLastScanResult({ status: 'already_scanned', text: decodedText });
-              showToastAndResume("Peserta sudah tercatat!", "error");
+              setLastScanResult({ status: 'already_scanned', text: `${namaPeserta} (${decodedText})` });
+              showToastAndResume(`${namaPeserta} sudah tercatat!`, "error");
             } else {
               await setDoc(logRef, {
                 participantId: decodedText,
+                nama: namaPeserta,
                 eventId: selectedEvent,
                 timestamp: new Date().toISOString()
               });
-              setLastScanResult({ status: 'success', text: decodedText });
-              showToastAndResume("Presensi Berhasil!", "success");
+              setLastScanResult({ status: 'success', text: `${namaPeserta} (${decodedText})` });
+              showToastAndResume(`${namaPeserta} Berhasil!`, "success");
             }
           } catch (error: any) {
              showToastAndResume(error.message || "Gagal mencatat presensi", "error");

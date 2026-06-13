@@ -98,7 +98,6 @@ export function RoomTab({ submissions }: Props) {
           e.stopPropagation();
           if (photoStr) setPreviewPhoto(photoStr);
         }}
-        title="Klik untuk melihat foto penuh"
       >
         {photoStr ? (
           <img 
@@ -111,6 +110,9 @@ export function RoomTab({ submissions }: Props) {
         )}
         <div className="absolute inset-0 bg-black/15 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <span className="text-[9px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-[1px]">Zoom</span>
+        </div>
+        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-[60] pointer-events-none">
+           Klik untuk foto penuh
         </div>
       </div>
     );
@@ -510,9 +512,12 @@ export function RoomTab({ submissions }: Props) {
                     <div 
                       key={idx} 
                       onClick={() => setSelectedPerson(mate)}
-                      className="bg-white rounded-2xl p-4 border border-slate-150 hover:border-red-400/[0.25] hover:bg-slate-50/[0.3] transition-all duration-300 shadow-[0_2px_6px_rgba(0,0,0,0.015)] flex items-center justify-between gap-3 group/mate cursor-pointer hover:shadow-md hover:-translate-y-1 active:scale-[0.98] animate-fade-in relative"
-                      title={`Klik untuk melihat detail ${mate.name}`}
+                      className="bg-white rounded-2xl p-4 border border-slate-150 hover:border-red-400/[0.25] hover:bg-slate-50/[0.3] transition-all duration-300 shadow-[0_2px_6px_rgba(0,0,0,0.015)] flex items-center justify-between gap-3 group/mate cursor-pointer hover:shadow-md hover:-translate-y-1 active:scale-[0.98] animate-fade-in relative z-10 hover:z-20"
                     >
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg opacity-0 invisible group-hover/mate:opacity-100 group-hover/mate:visible transition-all whitespace-nowrap z-[60] pointer-events-none">
+                         Klik untuk melihat detail {mate.name}
+                      </div>
+
                       <div className="flex items-center gap-3 min-w-0">
                         <PhotoAvatar photoStr={mate.foto} name={mate.name} sizeClass="w-11 h-11" roundedClass="rounded-full shadow-sm ring-2 ring-white" />
                         <div className="min-w-0">
