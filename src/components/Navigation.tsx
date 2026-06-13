@@ -1,4 +1,4 @@
-import { Home, ClipboardList, Database, Users, Lock, Unlock } from "lucide-react";
+import { Home, ClipboardList, Database, Users, Lock, Unlock, Scan } from "lucide-react";
 
 interface Props {
   activeTab: string;
@@ -65,7 +65,7 @@ export function Navigation({ activeTab, onTabChange, isAdminLoggedIn }: Props) {
             </span>
           </button>
           
-          {isAdminLoggedIn ? (
+          {isAdminLoggedIn && (
             <button
               onClick={() => onTabChange("data")}
               className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "data" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
@@ -75,7 +75,21 @@ export function Navigation({ activeTab, onTabChange, isAdminLoggedIn }: Props) {
                 Database Admin
               </span>
             </button>
-          ) : (
+          )}
+
+          {isAdminLoggedIn && (
+            <button
+              onClick={() => onTabChange("scanner")}
+              className={`nav-link px-3 transition-all border-b-2 flex items-center justify-center h-full group tooltip-container ${activeTab === "scanner" ? "text-red-600 border-red-600" : "border-transparent text-slate-500 hover:text-red-500"}`}
+            >
+              <Scan className="h-6 w-6" />
+              <span className="tooltip-text" style={{ width: "auto" }}>
+                Scanner Presensi
+              </span>
+            </button>
+          )}
+
+          {!isAdminLoggedIn && (
             <button
               onClick={() => onTabChange("data")}
               className={`nav-link px-3 ml-2 transition-all flex items-center justify-center  group tooltip-container text-slate-300 hover:text-slate-500`}

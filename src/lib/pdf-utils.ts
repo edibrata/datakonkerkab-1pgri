@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { KOP_SURAT_URL, TEMPLATE_URLS } from "./constants";
 import { SubmissionData, FlatAdminRow } from "../types";
+import QRCode from "qrcode";
 
 export const toProperCase = (str: string) => {
   if (!str) return "";
@@ -47,6 +48,7 @@ export const drawSingleCard = async (
   info: string,
   photoData: string | undefined,
   category: string,
+  qrPayload?: string
 ): Promise<string> => {
   return new Promise((resolve) => {
     const cvs = document.createElement("canvas");
@@ -59,11 +61,11 @@ export const drawSingleCard = async (
       TEMPLATE_URLS[catKey] || TEMPLATE_URLS["PESERTA CABANG"];
     const tpl = new Image();
     tpl.crossOrigin = "anonymous";
-    tpl.onload = () => {
+    tpl.onload = async () => {
       cvs.width = 1240;
       cvs.height = 1980;
       ctx.clearRect(0, 0, cvs.width, cvs.height);
-      const drawContent = (pImg: HTMLImageElement | null) => {
+      const drawContent = async (pImg: HTMLImageElement | null) => {
         try {
           ctx.fillStyle = "#FFFFFF";
           ctx.fillRect(0, 0, 1240, 1980);
@@ -123,7 +125,23 @@ export const drawSingleCard = async (
             ctx.font = `bold ${iSize}px "Times New Roman", Times, serif`;
           }
           ctx.fillText(displayInfo, 620, 1830);
-          resolve(cvs.toDataURL("image/jpeg", 1.0));
+
+          if (qrPayload) {
+            try {
+              const qrDataUrl = await QRCode.toDataURL(qrPayload, { margin: 1, width: 200, color: { dark: '#000000', light: '#ffffff' } });
+              const qrImg = new Image();
+              qrImg.onload = () => {
+                ctx.drawImage(qrImg, 1000, 1600, 200, 200);
+                resolve(cvs.toDataURL("image/jpeg", 1.0));
+              };
+              qrImg.src = qrDataUrl;
+            } catch (err) {
+              console.error("QR generated failed", err);
+              resolve(cvs.toDataURL("image/jpeg", 1.0));
+            }
+          } else {
+             resolve(cvs.toDataURL("image/jpeg", 1.0));
+          }
         } catch (err) {
           console.error("Error in drawContent:", err);
           const cvsFallback = document.createElement("canvas");
@@ -218,6 +236,7 @@ export const downloadFullPDF = async (id: string, data: SubmissionData) => {
           isPeserta ? data.nama_cabang! : (data as any)[`p${i}_jabatan`],
           (data as any)[`p${i}_foto`],
           data.kategori!,
+          `${id}-${i}`
         ),
       );
     }
@@ -268,6 +287,7 @@ export const printAllCardsA4 = async (
       isPeserta ? item.branch : item.jabatan,
       item.foto,
       (item.sD as any).kategori,
+      `${item.id}-${item.i}`
     );
 
     const pIdx = i % 9;
@@ -335,6 +355,7 @@ export const printAllCardsPVC = async (
       isPeserta ? item.branch : item.jabatan,
       item.foto,
       (item.sD as any).kategori,
+      `${item.id}-${item.i}`
     );
     
     // Mirror the image for PVC backside printing
@@ -416,6 +437,7 @@ export const printAllCardsPVCNormal = async (
       isPeserta ? item.branch : item.jabatan,
       item.foto,
       (item.sD as any).kategori,
+      `${item.id}-${item.i}`
     );
     
     const pIdx = i % 10;

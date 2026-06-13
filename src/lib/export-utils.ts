@@ -4,6 +4,8 @@ import * as XLSX from "xlsx";
 import autoTable from "jspdf-autotable";
 import { drawKopSurat, getTimestamp } from "./pdf-utils";
 
+import QRCode from "qrcode";
+
 export const executeExcelExport = (
   flattenedRows: FlatAdminRow[],
   showModal: (
@@ -831,16 +833,16 @@ export const executeMealCouponsPDF = async (
       doc.setFont("helvetica", "bold");
       doc.text("KUPON MAKAN KONKERKAB", startX + couponW / 2, startY + 6.5, { align: "center", maxWidth: couponW - 4 });
 
-      const middleY = startY + 10 + (couponH - 16) / 2;
+      const middleY = startY + 10 + (couponH - 10) / 2;
 
       doc.setTextColor(0);
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      doc.text(person.name.toUpperCase(), startX + couponW / 2, middleY - 4, { align: "center", maxWidth: couponW - 4 });
+      doc.text(person.name.toUpperCase(), startX + couponW / 2, middleY - 6, { align: "center", maxWidth: couponW - 4 });
       
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(`${person.kategori} - ${person.branch}`, startX + couponW / 2, middleY + 1, { align: "center", maxWidth: couponW - 4 });
+      doc.text(`${person.kategori} - ${person.branch}`, startX + couponW / 2, middleY - 2, { align: "center", maxWidth: couponW - 4 });
       
       const extraInfo = [
         person.kom ? `Komisi: ${person.kom}` : '',
@@ -848,13 +850,21 @@ export const executeMealCouponsPDF = async (
       ].filter(Boolean).join(" | ");
 
       if (extraInfo) {
-        doc.text(extraInfo, startX + couponW / 2, middleY + 6, { align: "center", maxWidth: couponW - 4 });
+        doc.text(extraInfo, startX + couponW / 2, middleY + 2, { align: "center", maxWidth: couponW - 4 });
+      }
+
+      try {
+        const qrDataUrl = await QRCode.toDataURL(`${person.id}-${person.i}`, { margin: 0, width: 60, color: { dark: '#000000', light: '#ffffff' } });
+        // 12x12 QR code centered
+        doc.addImage(qrDataUrl, "PNG", startX + (couponW - 12) / 2, middleY + 3.5, 12, 12);
+      } catch (e) {
+        console.error(e);
       }
       
-      doc.setFontSize(8);
-      doc.setTextColor(100);
-      doc.text(`Kupon ${c + 1} / 3`, startX + 4, startY + couponH - 3);
-      doc.text(`Sobek setelah pakai`, startX + couponW - 4, startY + couponH - 3, { align: "right" });
+      doc.setFontSize(7);
+      doc.setTextColor(120);
+      doc.text(`Kupon ${c + 1} / 3`, startX + 3, startY + couponH - 2);
+      doc.text(`Sobek stlh pakai`, startX + couponW - 3, startY + couponH - 2, { align: "right" });
       
       if (c < cols - 1) {
         doc.setDrawColor(180);

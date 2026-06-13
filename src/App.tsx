@@ -4,6 +4,7 @@ import { Navigation } from "./components/Navigation";
 import { HomeTab } from "./components/HomeTab";
 import { FormTab } from "./components/FormTab";
 import { AdminTab } from "./components/AdminTab";
+import { ScannerTab } from "./components/ScannerTab";
 import { SubmissionData } from "./types";
 
 import { RoomTab } from "./components/RoomTab";
@@ -149,6 +150,9 @@ export default function App() {
                       }
                     }}
                   />
+                )}
+                {activeTab === "scanner" && (
+                  <ScannerTab showModal={showModal} />
                 )}
               </>
             )}
