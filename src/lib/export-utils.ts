@@ -774,3 +774,90 @@ export const executePlenoAttendancePDF = async (
   }
   doc.save(`Konkerkab-1 Daftar Hadir ${getTimestamp()}.pdf`);
 };
+
+export const executeMealCouponsPDF = async (
+  flattenedRows: FlatAdminRow[],
+  showModal: Function,
+) => {
+  const doc = new jsPDF("p", "mm", "a4");
+  const data = [...flattenedRows];
+  if (data.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
+
+  const PRIORITY: Record<string, number> = {
+    "PESERTA CABANG": 1,
+    PANITIA: 2,
+    PENINJAU: 3,
+  };
+  data.sort((a, b) => {
+    if (PRIORITY[a.kategori] !== PRIORITY[b.kategori])
+      return (PRIORITY[a.kategori] || 99) - (PRIORITY[b.kategori] || 99);
+    if (a.branch.localeCompare(b.branch) !== 0)
+      return a.branch.localeCompare(b.branch);
+    return a.name.localeCompare(b.name);
+  });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const cols = 3; 
+  const rowsPerPage = 7;
+  
+  const couponW = pageWidth / cols;
+  const couponH = pageHeight / rowsPerPage;
+  
+  let currentRow = 0;
+
+  for (let i = 0; i < data.length; i++) {
+    const person = data[i];
+
+    if (currentRow >= rowsPerPage) {
+      doc.addPage();
+      currentRow = 0;
+    }
+
+    const startY = currentRow * couponH;
+    
+    for (let c = 0; c < cols; c++) {
+      const startX = c * couponW;
+      
+      doc.setDrawColor(200);
+      doc.setLineWidth(0.2);
+      doc.rect(startX, startY, couponW, couponH);
+      
+      doc.setFillColor(185, 28, 28);
+      doc.rect(startX, startY, couponW, 8, "F");
+      
+      doc.setTextColor(255);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text("KUPON MAKAN KONKERKAB", startX + couponW / 2, startY + 5.5, { align: "center", maxWidth: couponW - 2 });
+
+      doc.setTextColor(0);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      
+      doc.text(person.name, startX + 5, startY + 14, { maxWidth: couponW - 10 });
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.text(`${person.kategori}`, startX + 5, startY + 20, { maxWidth: couponW - 10 });
+      doc.text(`${person.branch}`, startX + 5, startY + 24, { maxWidth: couponW - 10 });
+      
+      doc.setFontSize(7);
+      doc.setTextColor(120);
+      doc.text(`Kupon ${c + 1} / 3`, startX + 5, startY + couponH - 4);
+      doc.text(`Hangus stlh pakai`, startX + couponW - 5, startY + couponH - 4, { align: "right" });
+      
+      if (c < cols - 1) {
+        doc.setDrawColor(180);
+        doc.setLineDashPattern([2, 2], 0);
+        doc.line(startX + couponW, startY, startX + couponW, startY + couponH);
+        doc.setLineDashPattern([], 0);
+        doc.setDrawColor(200);
+      }
+    }
+    
+    currentRow++;
+  }
+
+  doc.save(`Konkerkab-1 Kupon Makan ${getTimestamp()}.pdf`);
+};

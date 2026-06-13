@@ -15,6 +15,7 @@ import {
   executeSidangKomisiPDF,
   executeAttendancePDF,
   executePlenoAttendancePDF,
+  executeMealCouponsPDF,
 } from "../lib/export-utils";
 import {
   downloadFullPDF,
@@ -1245,6 +1246,30 @@ export function AdminTab({
                   </svg>
                 </div>
                 <span className="tooltip-text">Daftar Hadir Pleno</span>
+              </div>
+              <div
+                onClick={() => {
+                  setShowExportModal(false);
+                  executeMealCouponsPDF(flattenedRows, showModal);
+                }}
+                className="export-option-card group tooltip-container"
+              >
+                <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"
+                    />
+                  </svg>
+                </div>
+                <span className="tooltip-text">Kupon Makan</span>
               </div>
               <div
                 onClick={() => {
