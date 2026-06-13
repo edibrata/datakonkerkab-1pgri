@@ -904,3 +904,117 @@ export const executeMealCouponsPDF = async (
 
   doc.save(`Konkerkab-1 Kupon Makan ${getTimestamp()}.pdf`);
 };
+
+export const executeScannedResultPDF = async (
+  flattenedRows: FlatAdminRow[],
+  attendanceLogs: any[],
+  showModal: Function,
+  eventId?: string
+) => {
+  const doc = new jsPDF("p", "mm", "a4");
+  const data = [...flattenedRows];
+
+  if (data.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
+
+  const startYAfterKop = await drawKopSurat(doc);
+
+  let pageRanges: { name: string; start: number; end: number }[] = [];
+
+  const targetEvents = eventId ? EVENT_AGENDA.filter(e => e.id === eventId) : EVENT_AGENDA;
+
+  for (let i = 0; i < targetEvents.length; i++) {
+    const event = targetEvents[i];
+
+    // Filter attendees logically
+    const attendees = data.filter((r) => {
+      return attendanceLogs.some(log => log.participantId === `${r.id}-${r.i}` && log.eventId === event.id);
+    });
+
+    attendees.sort((a, b) => a.name.localeCompare(b.name));
+
+    if (i !== 0) {
+      doc.addPage();
+    }
+    
+    const startPageAt = (doc as any).internal.getNumberOfPages();
+
+    if (attendees.length === 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(15, 23, 42); // slate 900
+      doc.setFont("helvetica", "bold");
+      const sy = i === 0 ? startYAfterKop + 8 : 20;
+      doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, sy, {
+        align: "center",
+      });
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.setFont("helvetica", "normal");
+      doc.text("Belum ada data presensi (0 Hadir)", 105, sy + 8, { align: "center" });
+
+      pageRanges.push({
+        name: event.name,
+        start: startPageAt,
+        end: startPageAt,
+      });
+      continue;
+    }
+
+    const mapLogToTime = (r: FlatAdminRow) => {
+      const log = attendanceLogs.find(l => l.participantId === `${r.id}-${r.i}` && l.eventId === event.id);
+      return log ? new Date(log.timestamp).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "-";
+    };
+
+    const rows = attendees.map((r, idx) => [idx + 1, mapLogToTime(r), r.name, r.branch || "-", r.kategori || "-"]);
+
+    autoTable(doc, {
+      startY: i === 0 ? startYAfterKop + 15 : 25,
+      head: [["No", "Pukul", "Nama Lengkap", "Entitas", "Kategori"]],
+      body: rows,
+      theme: "striped",
+      showHead: "everyPage",
+      headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: { 0: { halign: "center", cellWidth: 10 }, 1: { halign: "center", cellWidth: 15 }, 3: { cellWidth: 45 }, 4: { cellWidth: 35 } },
+      didDrawPage: (d: any) => {
+        if (d.pageNumber === startPageAt) {
+          doc.setFontSize(14);
+          doc.setTextColor(15, 23, 42); // slate 900
+          doc.setFont("helvetica", "bold");
+          let sy = i === 0 ? startYAfterKop + 6 : 14;
+          doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, sy, {
+            align: "center",
+          });
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "normal");
+          doc.text(`Jumlah Hadir: ${attendees.length}`, 105, sy + 5, { align: "center" });
+        }
+      },
+    });
+
+    pageRanges.push({
+      name: event.name,
+      start: startPageAt,
+      end: (doc as any).internal.getNumberOfPages(),
+    });
+  }
+
+  pageRanges.forEach((range) => {
+    for (let i = range.start; i <= range.end; i++) {
+      doc.setPage(i);
+      const localCurrent = i - range.start + 1;
+      const localTotal = range.end - range.start + 1;
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `${range.name} - Hal. ${localCurrent} dari ${localTotal}`,
+        105,
+        doc.internal.pageSize.height - 10,
+        { align: "center" },
+      );
+    }
+  });
+
+  const eventName = eventId ? EVENT_AGENDA.find(e => e.id === eventId)?.name : '';
+  doc.save(`Konkerkab-1 Hasil Scan Presensi ${eventName ? eventName + ' ' : ''}${getTimestamp()}.pdf`);
+};

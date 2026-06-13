@@ -13,8 +13,14 @@ import { AdminLogin } from "./components/AdminLogin";
 
 export default function App() {
   const { submissions, attendanceLogs, isRegistrationOpen, loading } = useFirebaseData();
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(!!localStorage.getItem("pgri_admin_pass"));
-  const [activeTab, setActiveTab] = useState(!!localStorage.getItem("pgri_admin_pass") ? "beranda" : "info_peserta");
+  const getInitRole = (): "full" | "scanner" | null => {
+    const pass = localStorage.getItem("pgri_admin_pass");
+    if (pass === "adminpgri") return "full";
+    if (pass === "adminscan") return "scanner";
+    return null;
+  };
+  const [adminRole, setAdminRole] = useState<"full" | "scanner" | null>(getInitRole());
+  const [activeTab, setActiveTab] = useState(adminRole === "full" ? "beranda" : (adminRole === "scanner" ? "scanner" : "info_peserta"));
 
   // Modal States
   const [modalConfig, setModalConfig] = useState<{
@@ -72,7 +78,7 @@ export default function App() {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col text-sm">
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} isAdminLoggedIn={isAdminLoggedIn} />
+      <Navigation activeTab={activeTab} onTabChange={setActiveTab} adminRole={adminRole} />
 
       <main className="max-w-[96%] mx-auto px-4 py-6 md:py-8 flex-grow w-full">
         {loading ? (
@@ -85,7 +91,7 @@ export default function App() {
               <HomeTab
                 submissions={submissions}
                 isRegistrationOpen={isRegistrationOpen}
-                isAdminLoggedIn={isAdminLoggedIn}
+                isAdminLoggedIn={!!adminRole}
                 onOpenCategoryModal={() => {
                   if (!isRegistrationOpen)
                     return showModal(
@@ -98,9 +104,12 @@ export default function App() {
               />
             )}
             
-            {(activeTab === "formulir" || activeTab === "data") && !isAdminLoggedIn ? (
+            {(activeTab === "formulir" || activeTab === "data") && adminRole !== "full" ? (
                 <AdminLogin 
-                  onLoginSuccess={() => setIsAdminLoggedIn(true)} 
+                  onLoginSuccess={(role) => {
+                    setAdminRole(role);
+                    if (role === "scanner") setActiveTab("scanner");
+                  }} 
                   showModal={showModal} 
                 />
             ) : (
@@ -135,7 +144,8 @@ export default function App() {
                     setModalProgress={setModalProgress}
                     onViewPrevew={setPreviewImage}
                     onLogout={() => {
-                        setIsAdminLoggedIn(false);
+                        setAdminRole(null);
+                        localStorage.removeItem("pgri_admin_pass");
                         setActiveTab("beranda");
                     }}
                     onEditEntry={(id: string, participantIndex?: number) => {
@@ -153,7 +163,7 @@ export default function App() {
                     }}
                   />
                 )}
-                {activeTab === "scanner" && (
+                {activeTab === "scanner" && adminRole && (
                   <ScannerTab showModal={showModal} />
                 )}
               </>

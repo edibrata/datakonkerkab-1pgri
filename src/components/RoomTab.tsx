@@ -391,22 +391,22 @@ export function RoomTab({ submissions }: Props) {
               </div>
 
               {/* Main Content Info */}
-              <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start relative z-10">
+              <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start relative z-10">
                 <div className="flex-shrink-0 mx-auto md:mx-0">
                   <PhotoAvatar 
                     photoStr={selectedPerson.foto} 
                     name={selectedPerson.name} 
                     sizeClass="w-32 h-32 md:w-36 md:h-36" 
-                    roundedClass="rounded-2xl shadow-md ring-4 ring-slate-100/80 border border-slate-200" 
+                    roundedClass="rounded-3xl md:rounded-2xl shadow-md ring-4 ring-slate-100/80 border border-slate-200" 
                   />
                 </div>
                 
-                <div className="flex-1 w-full text-left space-y-4">
+                <div className="flex-1 w-full text-center md:text-left space-y-4">
                   <div>
                     <h3 className="text-xl md:text-2.5xl font-black text-slate-900 leading-tight mb-2">
                       {selectedPerson.name}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                       <span className="inline-flex items-center text-[9px] font-black uppercase text-red-600 bg-red-50 border border-red-100/60 px-2 py-0.5 rounded-md">
                         {selectedPerson.kategori || "PESERTA CABANG"}
                       </span>
@@ -415,7 +415,7 @@ export function RoomTab({ submissions }: Props) {
                   </div>
 
                   {/* Metadata Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-3 pt-3 border-t border-b border-dashed border-slate-200/80">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-3 pt-3 border-t border-b border-dashed border-slate-200/80 text-left">
                     <div className="flex items-center gap-3 p-1.5 bg-slate-50/40 rounded-xl border border-slate-100">
                       <div className="p-2 bg-white text-slate-400 rounded-lg flex-shrink-0 shadow-sm border border-slate-100">
                         <Building2 className="w-4 h-4 text-slate-500" />

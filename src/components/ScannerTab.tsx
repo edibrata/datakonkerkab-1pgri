@@ -2,12 +2,20 @@ import React, { useState, useRef, useEffect } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { getFirestore, doc, setDoc, getDoc, collection } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 export const ScannerTab = ({ showModal }: { showModal: Function }) => {
   const [selectedEvent, setSelectedEvent] = useState("");
+  const [selectedKomisiGuard, setSelectedKomisiGuard] = useState("");
   const [scannerActive, setScannerActive] = useState(false);
   const [lastScanResult, setLastScanResult] = useState<any>(null);
+  const [toast, setToast] = useState<{message: string, type: "success"|"error"} | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const isActiveRef = useRef(false);
+
+  useEffect(() => {
+    isActiveRef.current = scannerActive;
+  }, [scannerActive]);
 
   useEffect(() => {
     return () => {
@@ -30,8 +38,54 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
     { id: "makan_3", name: "Makan 3" }
   ];
 
+  const playBeep = (type: "success" | "error") => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      if (type === "success") {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+      } else {
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.2);
+      }
+    } catch (e) {
+      console.error("Audio playback failed", e);
+    }
+  };
+
+  const showToastAndResume = (msg: string, type: "success"|"error") => {
+    playBeep(type);
+    setToast({ message: msg, type });
+    setTimeout(() => {
+      setToast(null);
+      if (scannerRef.current && isActiveRef.current) {
+        try {
+          scannerRef.current.resume();
+        } catch(e) {}
+      }
+    }, 2000);
+  };
+
   const startScanner = () => {
     if (!selectedEvent) return showModal("ERROR", "Pilih agenda kegiatan dulu", "error");
+    if (selectedEvent === "komisi" && !selectedKomisiGuard) return showModal("ERROR", "Pilih komisi yang Anda jaga", "error");
+    
     setScannerActive(true);
     setLastScanResult(null);
 
@@ -48,28 +102,53 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
         async (decodedText) => {
           if (scannerRef.current) scannerRef.current.pause(true);
           try {
+            // Validate Komisi if event is komisi
+            if (selectedEvent === "komisi") {
+               const parts = decodedText.split("-");
+               const docId = parts[0];
+               const participantIndex = parseInt(parts[1] || "1");
+
+               const subRef = doc(db, "submissions", docId);
+               const subSnap = await getDoc(subRef);
+               if (!subSnap.exists()) {
+                  setLastScanResult({ status: 'error', text: `${decodedText} (Tidak Ditemukan)` });
+                  showToastAndResume("Data peserta tidak ditemukan!", "error");
+                  return;
+               }
+
+               const subData = subSnap.data();
+               const list = Array.isArray(subData.peserta) ? subData.peserta : (subData.peserta?.peserta || []);
+               const getField = (field: string) => {
+                  return subData[`p${participantIndex}_${field}`] || (list[participantIndex-1] ? list[participantIndex-1][field] : "") || "";
+               }
+               const komisiPeserta = getField("komisi") || "";
+               
+               if (komisiPeserta.toUpperCase() !== selectedKomisiGuard.toUpperCase()) {
+                  setLastScanResult({ status: 'error', text: `Terdaftar di ${komisiPeserta || "-"}` });
+                  showToastAndResume(`SALAH KOMISI! Peserta di ${komisiPeserta || "Lain"}`, "error");
+                  return;
+               }
+            }
+
             const logId = `${selectedEvent}_${decodedText}`;
             const logRef = doc(collection(db, "attendanceLogs"), logId);
             const docSnap = await getDoc(logRef);
             
             if (docSnap.exists()) {
-              showModal("INFO", `Peserta sudah terdaftar/mengambil bagian untuk kegiatan ini!`, "error");
               setLastScanResult({ status: 'already_scanned', text: decodedText });
+              showToastAndResume("Peserta sudah tercatat!", "error");
             } else {
               await setDoc(logRef, {
                 participantId: decodedText,
                 eventId: selectedEvent,
                 timestamp: new Date().toISOString()
               });
-              showModal("BERHASIL", `Presensi/Klaim berhasil dicatat!`, "success");
               setLastScanResult({ status: 'success', text: decodedText });
+              showToastAndResume("Presensi Berhasil!", "success");
             }
           } catch (error: any) {
-            showModal("ERROR", error.message || "Gagal mencatat presensi", "error");
+             showToastAndResume(error.message || "Gagal mencatat presensi", "error");
           }
-          setTimeout(() => {
-              if (scannerRef.current && scannerActive) scannerRef.current.resume();
-          }, 3000);
         },
         (errorMessage) => {
           // parse error, ignore
@@ -117,6 +196,24 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
           </select>
         </div>
 
+        {selectedEvent === "komisi" && (
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Pilih Komisi yang Dijaga</label>
+            <select 
+              className="w-full bg-slate-50 border border-emerald-200 text-emerald-800 text-sm font-bold uppercase p-3 rounded focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none"
+              value={selectedKomisiGuard}
+              onChange={(e) => setSelectedKomisiGuard(e.target.value)}
+              disabled={scannerActive}
+            >
+              <option value="">-- PILIH KOMISI --</option>
+              <option value="KOMISI A">KOMISI A (Sekretariat, Organisasi, SI)</option>
+              <option value="KOMISI B">KOMISI B (Advokasi & Kesejahteraan)</option>
+              <option value="KOMISI C">KOMISI C (Keuangan & Akademik)</option>
+              <option value="KOMISI D">KOMISI D (Kelembagaan & Sosial Budaya)</option>
+            </select>
+          </div>
+        )}
+
         {!scannerActive ? (
           <button 
             onClick={startScanner}
@@ -133,9 +230,25 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
           </button>
         )}
 
-        <div className={scannerActive ? 'block' : 'hidden'}>
+        <div className={`relative ${scannerActive ? 'block' : 'hidden'}`}>
           <div id="reader" className="w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-slate-200"></div>
-          {lastScanResult && (
+          
+          {toast && (
+            <div className="absolute inset-0 flex items-center justify-center p-4 z-10">
+               <div className={`w-full max-w-[280px] p-6 rounded-2xl shadow-xl flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200 ${toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                 {toast.type === 'success' ? (
+                   <CheckCircle2 className="w-16 h-16 mb-3 drop-shadow-md" />
+                 ) : (
+                   <XCircle className="w-16 h-16 mb-3 drop-shadow-md" />
+                 )}
+                 <h3 className="font-bold text-lg mb-1 leading-tight">{toast.message}</h3>
+                 {lastScanResult && <p className="text-sm border-t border-white/20 pt-2 pb-1 font-mono uppercase tracking-widest">{lastScanResult.text}</p>}
+                 <p className="text-[10px] bg-black/20 mt-3 py-1.5 px-3 rounded-full uppercase tracking-widest font-bold">Lanjut otomatis...</p>
+               </div>
+            </div>
+          )}
+
+          {lastScanResult && !toast && (
             <div className={`mt-4 p-4 rounded text-center ${lastScanResult.status === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
                 <p className="font-bold text-sm uppercase">{lastScanResult.status === 'success' ? 'Berhasil Dicatat' : 'Gagal / Sudah Dicatat'}</p>
                 <p className="text-xs mt-1 font-mono">{lastScanResult.text}</p>

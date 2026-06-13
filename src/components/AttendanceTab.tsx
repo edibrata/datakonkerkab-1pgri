@@ -16,19 +16,27 @@ export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
     return getFlattenedRows(submissions);
   }, [submissions]);
 
-  const totalParticipants = flatRows.length;
+  const totalPesertaCabang = useMemo(() => {
+    return flatRows.filter(r => r.kategori === "PESERTA CABANG").length;
+  }, [flatRows]);
 
   const stats = useMemo(() => {
     return EVENT_AGENDA.map((event) => {
       const logsForEvent = attendanceLogs.filter((l) => l.eventId === event.id);
-      const count = logsForEvent.length;
+      
+      const pesertaCabangLogs = logsForEvent.filter(l => {
+         const person = flatRows.find((r) => `${r.id}-${r.i}` === l.participantId);
+         return person?.kategori === "PESERTA CABANG";
+      });
+
+      const count = pesertaCabangLogs.length;
       return {
         ...event,
         count,
-        percentage: totalParticipants ? Math.round((count / totalParticipants) * 100) : 0,
+        percentage: totalPesertaCabang ? Math.round((count / totalPesertaCabang) * 100) : 0,
       };
     });
-  }, [attendanceLogs, totalParticipants]);
+  }, [attendanceLogs, flatRows, totalPesertaCabang]);
 
   const enrichedLogs = useMemo(() => {
     return attendanceLogs
@@ -58,20 +66,20 @@ export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
   }, [enrichedLogs, selectedEvent, searchTerm]);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-4">Statistik Presensi</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Peserta/Tiket</span>
-            <span className="text-3xl font-black text-slate-800 mt-2">{totalParticipants}</span>
+    <div className="space-y-4 md:space-y-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 text-left">
+        <h2 className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tight mb-4 text-center md:text-left">Statistik Presensi</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+          <div className="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col justify-between">
+            <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest leading-tight">Total Peserta Cabang</span>
+            <span className="text-2xl md:text-3xl font-black text-slate-800 mt-2">{totalPesertaCabang}</span>
           </div>
           {stats.map((stat) => (
-            <div key={stat.id} className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex flex-col justify-between">
-              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{stat.name}</span>
-              <div className="flex items-end gap-2 mt-2">
-                <span className="text-2xl font-black text-emerald-700 leading-none">{stat.count}</span>
-                <span className="text-xs font-bold text-emerald-500 pb-0.5">{stat.percentage}%</span>
+            <div key={stat.id} className="bg-emerald-50/50 p-3 md:p-4 rounded-xl border border-emerald-100 flex flex-col justify-between">
+              <span className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-tight">{stat.name}</span>
+              <div className="flex items-end gap-1 md:gap-2 mt-2">
+                <span className="text-xl md:text-2xl font-black text-emerald-700 leading-none">{stat.count}</span>
+                <span className="text-[10px] md:text-xs font-bold text-emerald-500 pb-0.5">{stat.percentage}%</span>
               </div>
             </div>
           ))}
@@ -79,11 +87,11 @@ export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">Rincian Log</h2>
-          <div className="flex w-full md:w-auto gap-2">
+        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-3 md:gap-4 items-center justify-between">
+          <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight self-start md:self-auto">Rincian Log</h2>
+          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-2">
             <select
-              className="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold uppercase p-2 rounded focus:outline-none focus:border-red-400"
+              className="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold uppercase p-2 rounded-lg focus:outline-none focus:border-red-400 w-full sm:w-auto"
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
             >
@@ -95,15 +103,47 @@ export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
             <input
               type="text"
               placeholder="Cari nama / cabang..."
-              className="bg-slate-50 border border-slate-200 text-slate-800 text-sm p-2 rounded focus:outline-none focus:border-red-400 min-w-[200px]"
+              className="bg-slate-50 border border-slate-200 text-slate-800 text-sm p-2 rounded-lg focus:outline-none focus:border-red-400 w-full sm:w-auto min-w-0 md:min-w-[200px]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        {/* Mobile View */}
+        <div className="block md:hidden border-t border-slate-100">
+          {filteredLogs.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 font-medium">Belum ada data log.</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filteredLogs.map((log, idx) => (
+                <div key={log.id} className="p-3 sm:p-4 hover:bg-slate-50/50 transition-colors flex gap-3 text-left">
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-200 mt-0.5">
+                    <span className="text-xs sm:text-sm font-black text-slate-400">{idx + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="text-sm font-black text-slate-800 truncate pr-2">{log.name}</div>
+                      <div className="text-[9px] sm:text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded whitespace-nowrap">
+                        {new Date(log.timestamp).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
+                    <div className="text-[11px] sm:text-xs font-medium text-slate-600 truncate mb-1.5">
+                      {log.branch} <span className="opacity-50 mx-1">&bull;</span> <span className="text-slate-400">{log.kategori}</span>
+                    </div>
+                    <div className="inline-flex items-center text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                      {log.eventName}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse border-t border-slate-100">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-500">
                 <th className="p-4 font-black w-14 text-center">No</th>
@@ -117,7 +157,7 @@ export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
             <tbody>
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400 font-medium">Beliom ada data log.</td>
+                  <td colSpan={6} className="p-8 text-center text-slate-400 font-medium">Belum ada data log.</td>
                 </tr>
               ) : (
                 filteredLogs.map((log, idx) => (

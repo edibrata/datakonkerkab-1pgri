@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 interface Props {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (role: "full" | "scanner") => void;
   showModal: (title: string, message: string, type: "success" | "error") => void;
 }
 
@@ -13,7 +13,10 @@ export function AdminLogin({ onLoginSuccess, showModal }: Props) {
   const checkAdmin = () => {
     if (password === "adminpgri") {
       if (rememberMe) localStorage.setItem("pgri_admin_pass", password);
-      onLoginSuccess();
+      onLoginSuccess("full");
+    } else if (password === "adminscan") {
+      if (rememberMe) localStorage.setItem("pgri_admin_pass", password);
+      onLoginSuccess("scanner");
     } else {
       showModal("AKSES DITOLAK", "Password salah.", "error");
     }
