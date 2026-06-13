@@ -193,7 +193,7 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-      <div className="mb-6 border-b border-slate-100 pb-4">
+      <div className="mb-6 border-b border-slate-100 pb-4 text-center md:text-left">
         <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Scanner QR Code</h2>
         <p className="text-xs text-slate-500 font-medium uppercase mt-1">
           Konfirmasi Kehadiran & Jatah Makan
@@ -201,10 +201,10 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
       </div>
 
       <div className="space-y-6">
-        <div>
+        <div className="text-center md:text-left">
           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Pilih Agenda / Kegiatan</label>
           <select 
-            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold uppercase p-3 rounded focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 outline-none"
+            className="w-full text-center md:text-left bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold uppercase p-3 rounded focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 outline-none"
             value={selectedEvent}
             onChange={(e) => setSelectedEvent(e.target.value)}
             disabled={scannerActive}
@@ -217,10 +217,10 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
         </div>
 
         {selectedEvent === "komisi" && (
-          <div>
+          <div className="text-center md:text-left">
             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Pilih Komisi yang Dijaga</label>
             <select 
-              className="w-full bg-slate-50 border border-emerald-200 text-emerald-800 text-sm font-bold uppercase p-3 rounded focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none"
+              className="w-full text-center md:text-left bg-slate-50 border border-emerald-200 text-emerald-800 text-sm font-bold uppercase p-3 rounded focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none"
               value={selectedKomisiGuard}
               onChange={(e) => setSelectedKomisiGuard(e.target.value)}
               disabled={scannerActive}

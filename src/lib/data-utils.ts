@@ -182,3 +182,77 @@ export function getFlattenedRows(
 
   return rows;
 }
+
+export interface LeaderboardEntry {
+  participantId: string;
+  name: string;
+  branch: string;
+  kategori: string;
+  attendancesCount: number;
+  totalTimeScore: number;
+  poinKecepatan: number;
+  rank: number;
+}
+
+export const getLeaderboard = (flattenedRows: FlatAdminRow[], attendanceLogs: any[]): LeaderboardEntry[] => {
+  const filteredLogs = attendanceLogs.filter(log => !log.eventId.includes("makan"));
+
+  // 1. Calculate speed points for each log per event
+  const eventsMap = new Map<string, any[]>();
+  filteredLogs.forEach(log => {
+      const arr = eventsMap.get(log.eventId) || [];
+      arr.push(log);
+      eventsMap.set(log.eventId, arr);
+  });
+
+  const speedPointsMap = new Map<string, number>();
+  eventsMap.forEach((logs, eventId) => {
+      logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      logs.forEach((log, idx) => {
+          // fastest gets 100, then decreases by 1, minimum 50
+          const pts = Math.max(50, 100 - idx);
+          speedPointsMap.set(`${log.participantId}-${eventId}`, pts);
+      });
+  });
+
+  const leaderboard = flattenedRows.map(row => {
+    const pId = `${row.id}-${row.i}`;
+    const logsForUser = filteredLogs.filter(log => log.participantId === pId);
+    
+    // Calculate score
+    const attendancesCount = logsForUser.length;
+    const totalTimeScore = logsForUser.reduce((sum, log) => sum + new Date(log.timestamp).getTime(), 0);
+    const poinKecepatan = logsForUser.reduce((sum, log) => sum + (speedPointsMap.get(`${pId}-${log.eventId}`) || 0), 0);
+
+    return {
+      participantId: pId,
+      name: row.name,
+      branch: row.branch || "-",
+      kategori: row.kategori || "-",
+      attendancesCount,
+      totalTimeScore,
+      poinKecepatan
+    };
+  });
+
+  // Filter out those with 0 attendance if we want, or keep them at the bottom.
+  // We should keep everyone and rank them, or only rank those with >0 attendees. 
+  // Let's rank everyone, but sort by attendance first.
+  leaderboard.sort((a, b) => {
+    if (b.attendancesCount !== a.attendancesCount) {
+      return b.attendancesCount - a.attendancesCount; // Descending
+    }
+    // If same attendance count, tie-break by totalTimeScore (ascending - lower sum is earlier)
+    // However, if count is 0, totalTimeScore is 0.
+    if (a.attendancesCount === 0) return 0;
+    return a.totalTimeScore - b.totalTimeScore;
+  });
+
+  let currentRank = 1;
+  return leaderboard.map((entry, idx) => {
+    return {
+      ...entry,
+      rank: entry.attendancesCount > 0 ? idx + 1 : 9999
+    };
+  });
+};

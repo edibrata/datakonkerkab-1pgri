@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useFirebaseData } from "./hooks/useFirebaseData";
 import { Navigation } from "./components/Navigation";
-import { HomeTab } from "./components/HomeTab";
-import { FormTab } from "./components/FormTab";
-import { AdminTab } from "./components/AdminTab";
-import { ScannerTab } from "./components/ScannerTab";
-import { AttendanceTab } from "./components/AttendanceTab";
 import { SubmissionData } from "./types";
 
-import { RoomTab } from "./components/RoomTab";
-import { AdminLogin } from "./components/AdminLogin";
+const HomeTab = lazy(() => import("./components/HomeTab").then(module => ({ default: module.HomeTab })));
+const FormTab = lazy(() => import("./components/FormTab").then(module => ({ default: module.FormTab })));
+const AdminTab = lazy(() => import("./components/AdminTab").then(module => ({ default: module.AdminTab })));
+const ScannerTab = lazy(() => import("./components/ScannerTab").then(module => ({ default: module.ScannerTab })));
+const AttendanceTab = lazy(() => import("./components/AttendanceTab").then(module => ({ default: module.AttendanceTab })));
+const PeringkatTab = lazy(() => import("./components/PeringkatTab").then(module => ({ default: module.PeringkatTab })));
+const KonfirmasiTab = lazy(() => import("./components/KonfirmasiTab").then(module => ({ default: module.KonfirmasiTab })));
+const RoomTab = lazy(() => import("./components/RoomTab").then(module => ({ default: module.RoomTab })));
+const AdminLogin = lazy(() => import("./components/AdminLogin").then(module => ({ default: module.AdminLogin })));
 
 export default function App() {
-  const { submissions, attendanceLogs, isRegistrationOpen, loading } = useFirebaseData();
+  const { submissions, attendanceLogs, confirmations, isRegistrationOpen, loading } = useFirebaseData();
   const getInitRole = (): "full" | "scanner" | null => {
     const pass = localStorage.getItem("pgri_admin_pass");
     if (pass === "adminpgri") return "full";
@@ -86,7 +88,11 @@ export default function App() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
           </div>
         ) : (
-          <>
+          <Suspense fallback={
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+            </div>
+          }>
             {activeTab === "beranda" && (
               <HomeTab
                 submissions={submissions}
@@ -139,6 +145,7 @@ export default function App() {
                   <AdminTab
                     submissions={submissions}
                     attendanceLogs={attendanceLogs}
+                    confirmations={confirmations}
                     isRegistrationOpen={isRegistrationOpen}
                     showModal={showModal}
                     setModalProgress={setModalProgress}
@@ -172,11 +179,17 @@ export default function App() {
             {activeTab === "info_peserta" && (
               <RoomTab submissions={submissions} />
             )}
+            {activeTab === "konfirmasi" && (
+              <KonfirmasiTab submissions={submissions} confirmations={confirmations} showModal={showModal} />
+            )}
 
             {activeTab === "presensi" && (
-              <AttendanceTab submissions={submissions} attendanceLogs={attendanceLogs} />
+              <AttendanceTab submissions={submissions} attendanceLogs={attendanceLogs} confirmations={confirmations} />
             )}
-          </>
+            {activeTab === "peringkat" && (
+              <PeringkatTab submissions={submissions} attendanceLogs={attendanceLogs} />
+            )}
+          </Suspense>
         )}
       </main>
 

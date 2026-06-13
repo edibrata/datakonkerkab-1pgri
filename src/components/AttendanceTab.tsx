@@ -6,9 +6,10 @@ import { getFlattenedRows } from "../lib/data-utils";
 interface Props {
   submissions: SubmissionData[];
   attendanceLogs: any[];
+  confirmations?: any[];
 }
 
-export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
+export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] }: Props) => {
   const [selectedEvent, setSelectedEvent] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -30,13 +31,22 @@ export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
       });
 
       const count = pesertaCabangLogs.length;
+
+      const eventConfirmations = confirmations.filter(c => c.eventId === event.id);
+      const pesertaCabangConfirms = eventConfirmations.filter(c => {
+        const person = flatRows.find((r) => `${r.id}-${r.i}` === c.participantId);
+        return person?.kategori === "PESERTA CABANG";
+      });
+      const confirmCount = pesertaCabangConfirms.length;
+
       return {
         ...event,
         count,
+        confirmCount,
         percentage: totalPesertaCabang ? Math.round((count / totalPesertaCabang) * 100) : 0,
       };
     });
-  }, [attendanceLogs, flatRows, totalPesertaCabang]);
+  }, [attendanceLogs, confirmations, flatRows, totalPesertaCabang]);
 
   const enrichedLogs = useMemo(() => {
     return attendanceLogs
@@ -70,16 +80,23 @@ export const AttendanceTab = ({ submissions, attendanceLogs }: Props) => {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 text-left">
         <h2 className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tight mb-4 text-center md:text-left">Statistik Presensi</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-          <div className="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col justify-between">
+          <div className="col-span-2 sm:col-span-1 bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col justify-between text-center md:text-left">
             <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest leading-tight">Total Peserta Cabang</span>
             <span className="text-2xl md:text-3xl font-black text-slate-800 mt-2">{totalPesertaCabang}</span>
           </div>
           {stats.map((stat) => (
-            <div key={stat.id} className="bg-emerald-50/50 p-3 md:p-4 rounded-xl border border-emerald-100 flex flex-col justify-between">
+            <div key={stat.id} className="bg-emerald-50/50 p-3 md:p-4 rounded-xl border border-emerald-100 flex flex-col justify-between text-center md:text-left relative">
               <span className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-tight">{stat.name}</span>
-              <div className="flex items-end gap-1 md:gap-2 mt-2">
-                <span className="text-xl md:text-2xl font-black text-emerald-700 leading-none">{stat.count}</span>
-                <span className="text-[10px] md:text-xs font-bold text-emerald-500 pb-0.5">{stat.percentage}%</span>
+              <div className="flex flex-col mt-2 gap-1">
+                <div className="flex items-end justify-center md:justify-start gap-1 md:gap-2">
+                  <span className="text-sm font-black text-emerald-700 leading-none" title="Telah Scan">SCAN: {stat.count}</span>
+                  <span className="text-[10px] md:text-xs font-bold text-emerald-500 pb-0.5">({stat.percentage}%)</span>
+                </div>
+                {!stat.id.includes("makan") && (
+                  <div className="flex items-end justify-center md:justify-start gap-1 md:gap-2">
+                    <span className="text-sm font-black text-indigo-600 leading-none" title="Konfirmasi Kehadiran">AWAL: {stat.confirmCount}</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}

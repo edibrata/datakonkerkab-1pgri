@@ -6,6 +6,7 @@ import { drawKopSurat, getTimestamp } from "./pdf-utils";
 
 import QRCode from "qrcode";
 
+import { getLeaderboard } from "./data-utils";
 import { EVENT_AGENDA } from "./constants";
 
 export const executeExcelExport = (
@@ -916,11 +917,11 @@ export const executeScannedResultPDF = async (
 
   if (data.length === 0) return showModal("ERROR", "Tidak ada data.", "error");
 
-  const startYAfterKop = await drawKopSurat(doc);
-
   let pageRanges: { name: string; start: number; end: number }[] = [];
 
   const targetEvents = eventId ? EVENT_AGENDA.filter(e => e.id === eventId) : EVENT_AGENDA;
+
+  let isFirstDocPage = true;
 
   for (let i = 0; i < targetEvents.length; i++) {
     const event = targetEvents[i];
@@ -929,71 +930,184 @@ export const executeScannedResultPDF = async (
     const attendees = data.filter((r) => {
       return attendanceLogs.some(log => log.participantId === `${r.id}-${r.i}` && log.eventId === event.id);
     });
-
     attendees.sort((a, b) => a.name.localeCompare(b.name));
 
-    if (i !== 0) {
+    // Filter not scanned logically
+    const notScanned = data.filter((r) => {
+      return !attendanceLogs.some(log => log.participantId === `${r.id}-${r.i}` && log.eventId === event.id);
+    });
+    notScanned.sort((a, b) => {
+      const branchA = a.branch || "";
+      const branchB = b.branch || "";
+      if (branchA !== branchB) return branchA.localeCompare(branchB);
+      return a.name.localeCompare(b.name);
+    });
+
+    // --- 1. HADIR SECTION ---
+    if (!isFirstDocPage) {
       doc.addPage();
     }
+    isFirstDocPage = false;
     
-    const startPageAt = (doc as any).internal.getNumberOfPages();
+    let startYAfterKop1 = await drawKopSurat(doc);
+    let startPageAt1 = (doc as any).internal.getNumberOfPages();
 
     if (attendees.length === 0) {
       doc.setFontSize(14);
       doc.setTextColor(15, 23, 42); // slate 900
       doc.setFont("helvetica", "bold");
-      const sy = i === 0 ? startYAfterKop + 8 : 20;
-      doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, sy, {
+      doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop1 + 8, {
         align: "center",
       });
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.setFont("helvetica", "normal");
-      doc.text("Belum ada data presensi (0 Hadir)", 105, sy + 8, { align: "center" });
+      doc.text("Belum ada data presensi (0 Hadir)", 105, startYAfterKop1 + 16, { align: "center" });
 
       pageRanges.push({
-        name: event.name,
-        start: startPageAt,
-        end: startPageAt,
+        name: `Hadir ${event.name}`,
+        start: startPageAt1,
+        end: startPageAt1,
       });
-      continue;
+    } else {
+      const mapLogToTime = (r: FlatAdminRow) => {
+        const log = attendanceLogs.find(l => l.participantId === `${r.id}-${r.i}` && l.eventId === event.id);
+        return log ? new Date(log.timestamp).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "-";
+      };
+
+      const rowsHadir = attendees.map((r, idx) => [idx + 1, mapLogToTime(r), r.name, r.branch || "-", r.kategori || "-"]);
+
+      autoTable(doc, {
+        startY: startYAfterKop1 + 15,
+        head: [["No", "Pukul", "Nama Lengkap", "Entitas", "Kategori"]],
+        body: rowsHadir,
+        theme: "striped",
+        showHead: "everyPage",
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
+        styles: { fontSize: 8, cellPadding: 2 },
+        columnStyles: { 0: { halign: "center", cellWidth: 10 }, 1: { halign: "center", cellWidth: 15 }, 3: { cellWidth: 45 }, 4: { cellWidth: 35 } },
+        didDrawPage: (d: any) => {
+          if (d.pageNumber === startPageAt1) {
+            doc.setFontSize(14);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "bold");
+            doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop1 + 6, {
+              align: "center",
+            });
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Jumlah Hadir: ${attendees.length}`, 105, startYAfterKop1 + 11, { align: "center" });
+          }
+        },
+      });
+
+      pageRanges.push({
+        name: `Hadir ${event.name}`,
+        start: startPageAt1,
+        end: (doc as any).internal.getNumberOfPages(),
+      });
     }
 
-    const mapLogToTime = (r: FlatAdminRow) => {
-      const log = attendanceLogs.find(l => l.participantId === `${r.id}-${r.i}` && l.eventId === event.id);
-      return log ? new Date(log.timestamp).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "-";
-    };
+    // --- 2. BELUM SCAN SECTION ---
+    doc.addPage();
+    let startYAfterKop2 = await drawKopSurat(doc);
+    let startPageAt2 = (doc as any).internal.getNumberOfPages();
 
-    const rows = attendees.map((r, idx) => [idx + 1, mapLogToTime(r), r.name, r.branch || "-", r.kategori || "-"]);
+    if (notScanned.length === 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(15, 23, 42);
+      doc.setFont("helvetica", "bold");
+      doc.text(`BELUM SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop2 + 8, {
+        align: "center",
+      });
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.setFont("helvetica", "normal");
+      doc.text("Semua peserta sudah scan (0 Belum)", 105, startYAfterKop2 + 16, { align: "center" });
+
+      pageRanges.push({
+        name: `Belum ${event.name}`,
+        start: startPageAt2,
+        end: startPageAt2,
+      });
+    } else {
+      const rowsBelum = notScanned.map((r, idx) => [idx + 1, r.branch || "-", r.name, r.jabatan || "-", r.kategori || "-"]);
+
+      autoTable(doc, {
+        startY: startYAfterKop2 + 15,
+        head: [["No", "Entitas Cabang", "Nama Lengkap", "Jabatan", "Kategori"]],
+        body: rowsBelum,
+        theme: "striped",
+        showHead: "everyPage",
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
+        styles: { fontSize: 8, cellPadding: 2 },
+        columnStyles: { 0: { halign: "center", cellWidth: 10 }, 1: { cellWidth: 40 }, 3: { cellWidth: 35 }, 4: { cellWidth: 30 } },
+        didDrawPage: (d: any) => {
+          if (d.pageNumber === startPageAt2) {
+            doc.setFontSize(14);
+            doc.setTextColor(15, 23, 42); 
+            doc.setFont("helvetica", "bold");
+            doc.text(`BELUM SCAN ${event.name.toUpperCase()}`, 105, startYAfterKop2 + 6, {
+              align: "center",
+            });
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Jumlah Belum Scan: ${notScanned.length}`, 105, startYAfterKop2 + 11, { align: "center" });
+          }
+        },
+      });
+
+      pageRanges.push({
+        name: `Belum ${event.name}`,
+        start: startPageAt2,
+        end: (doc as any).internal.getNumberOfPages(),
+      });
+    }
+  }
+
+  if (!eventId) {
+    const leaderboard = getLeaderboard(flattenedRows, attendanceLogs);
+    
+    doc.addPage();
+    let startYAfterKopLeader = await drawKopSurat(doc);
+    let startPageAtLeader = (doc as any).internal.getNumberOfPages();
+
+    const agendasWithoutMakan = EVENT_AGENDA.filter(e => !e.id.includes("makan")).length;
+
+    const rowsLeader = leaderboard.map((r, idx) => [
+      r.rank,
+      r.name,
+      r.branch,
+      `${r.attendancesCount}/${agendasWithoutMakan}`,
+    ]);
 
     autoTable(doc, {
-      startY: i === 0 ? startYAfterKop + 15 : 25,
-      head: [["No", "Pukul", "Nama Lengkap", "Entitas", "Kategori"]],
-      body: rows,
+      startY: startYAfterKopLeader + 15,
+      head: [["Peringkat", "Nama Lengkap", "Entitas Cabang", "Kehadiran"]],
+      body: rowsLeader,
       theme: "striped",
       showHead: "everyPage",
       headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontSize: 9, halign: "center" },
       styles: { fontSize: 8, cellPadding: 2 },
-      columnStyles: { 0: { halign: "center", cellWidth: 10 }, 1: { halign: "center", cellWidth: 15 }, 3: { cellWidth: 45 }, 4: { cellWidth: 35 } },
+      columnStyles: { 0: { halign: "center", cellWidth: 20 }, 1: { cellWidth: 70 }, 2: { cellWidth: 70 }, 3: { halign: "center", cellWidth: 30 } },
       didDrawPage: (d: any) => {
-        if (d.pageNumber === startPageAt) {
+        if (d.pageNumber === startPageAtLeader) {
           doc.setFontSize(14);
-          doc.setTextColor(15, 23, 42); // slate 900
+          doc.setTextColor(15, 23, 42); 
           doc.setFont("helvetica", "bold");
-          let sy = i === 0 ? startYAfterKop + 6 : 14;
-          doc.text(`HASIL SCAN ${event.name.toUpperCase()}`, 105, sy, {
+          doc.text(`PERINGKAT KEDISIPLINAN PESERTA`, 105, startYAfterKopLeader + 6, {
             align: "center",
           });
           doc.setFontSize(9);
           doc.setFont("helvetica", "normal");
-          doc.text(`Jumlah Hadir: ${attendees.length}`, 105, sy + 5, { align: "center" });
+          doc.text(`Berdasarkan jumlah kehadiran dan akumulasi waktu presensi`, 105, startYAfterKopLeader + 11, { align: "center" });
         }
       },
     });
 
     pageRanges.push({
-      name: event.name,
-      start: startPageAt,
+      name: `Leaderboard`,
+      start: startPageAtLeader,
       end: (doc as any).internal.getNumberOfPages(),
     });
   }
@@ -1017,4 +1131,100 @@ export const executeScannedResultPDF = async (
 
   const eventName = eventId ? EVENT_AGENDA.find(e => e.id === eventId)?.name : '';
   doc.save(`Konkerkab-1 Hasil Scan Presensi ${eventName ? eventName + ' ' : ''}${getTimestamp()}.pdf`);
+};
+
+export const executeKuorumPDF = async (
+  flattenedRows: FlatAdminRow[],
+  attendanceLogs: any[],
+  confirmations: any[],
+) => {
+  const doc = new jsPDF("p", "mm", "a4");
+  let startYAfterKop = await drawKopSurat(doc);
+  let startPageAt = (doc as any).internal.getNumberOfPages();
+
+  const pesertaCabang = flattenedRows.filter(r => r.kategori === "PESERTA CABANG").sort((a, b) => {
+    const branchCmp = a.branch.localeCompare(b.branch);
+    if (branchCmp !== 0) return branchCmp;
+    return a.name.localeCompare(b.name);
+  });
+  const totalPesertaHakSuara = pesertaCabang.length;
+
+  const eventId = "pleno_1";
+  const logsForEvent = attendanceLogs.filter(l => l.eventId === eventId);
+  const confirmsForEvent = confirmations.filter(c => c.eventId === eventId);
+
+  const stats = {
+    hadirFisik: 0,
+    sudahKonfirmasi: 0,
+    belumAdaKeterangan: 0
+  };
+
+  const rows: any[] = [];
+  
+  pesertaCabang.forEach((r, idx) => {
+    const fullPid = `${r.id}-${r.i}`;
+    const hasScanned = logsForEvent.some(l => l.participantId === fullPid);
+    const hasConfirmed = confirmsForEvent.some(c => c.participantId === fullPid);
+
+    let statusStr = "";
+    if (hasScanned) {
+      statusStr = "✅ Hadir (Scan Barcode)";
+      stats.hadirFisik++;
+    } else if (hasConfirmed) {
+      statusStr = "⏳ Dikonfirmasi (Belum Scan)";
+      stats.sudahKonfirmasi++;
+    } else {
+      statusStr = "❌ Belum Ada Keterangan";
+      stats.belumAdaKeterangan++;
+    }
+
+    rows.push([
+      idx + 1,
+      r.name,
+      r.branch,
+      statusStr
+    ]);
+  });
+  
+  const totalKuorum = stats.hadirFisik + stats.sudahKonfirmasi;
+  const kuorumPercent = totalPesertaHakSuara > 0 ? Math.round((totalKuorum / totalPesertaHakSuara) * 100) : 0;
+  const isMemenuhi = kuorumPercent > 50;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("LAPORAN KUORUM - SIDANG PLENO I", 105, startYAfterKop, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  const yStatsStart = startYAfterKop + 10;
+  doc.text(`Total Peserta Hak Suara: ${totalPesertaHakSuara}`, 15, yStatsStart);
+  doc.text(`Hadir Fisik (Scan Barcode): ${stats.hadirFisik}`, 15, yStatsStart + 6);
+  doc.text(`Menunggu Masuk (Sudah Konfirmasi): ${stats.sudahKonfirmasi}`, 15, yStatsStart + 12);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text(`Total Kuorum Dicapai: ${totalKuorum}/${totalPesertaHakSuara} (${kuorumPercent}% - ${isMemenuhi ? 'MEMENUHI KUORUM' : 'BELUM MEMENUHI'})`, 15, yStatsStart + 20);
+
+  autoTable(doc, {
+    startY: yStatsStart + 25,
+    margin: { top: 25 },
+    head: [["No", "Nama Lengkap", "Entitas Cabang", "Status Kehadiran"]],
+    body: rows,
+    theme: "striped",
+    showHead: "everyPage",
+    headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: "bold", halign: "center" },
+    styles: { fontSize: 9, cellPadding: 3 },
+    columnStyles: { 0: { halign: "center", cellWidth: 15 }, 1: { cellWidth: 60 }, 2: { cellWidth: 50 }, 3: { cellWidth: 'auto' } },
+    didDrawPage: (d: any) => {
+      if (d.pageNumber === startPageAt) {
+        // first page logic already handled by Kop
+      } else {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("LAPORAN KUORUM - SIDANG PLENO I", 105, 15, { align: "center" });
+        d.settings.startY = 25;
+      }
+    },
+  });
+
+  doc.save(`Konkerkab-1 Laporan Kuorum Pleno I ${getTimestamp()}.pdf`);
 };

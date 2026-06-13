@@ -7,6 +7,7 @@ import { SubmissionData } from "../types";
 export const useFirebaseData = () => {
   const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
   const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
+  const [confirmations, setConfirmations] = useState<any[]>([]);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +47,15 @@ export const useFirebaseData = () => {
       setAttendanceLogs(logs);
     });
 
+    const confRef = collection(db, "confirmations");
+    const unsubConf = onSnapshot(confRef, (snapshot) => {
+      const confs: any[] = [];
+      snapshot.forEach((doc) => {
+        confs.push({ ...doc.data(), id: doc.id });
+      });
+      setConfirmations(confs);
+    });
+
     const settingsRef = doc(
       db,
       "artifacts",
@@ -64,9 +74,10 @@ export const useFirebaseData = () => {
     return () => {
       unsubPendaftar();
       unsubLogs();
+      unsubConf();
       unsubSettings();
     };
   }, []);
 
-  return { submissions, attendanceLogs, isRegistrationOpen, loading };
+  return { submissions, attendanceLogs, confirmations, isRegistrationOpen, loading };
 };

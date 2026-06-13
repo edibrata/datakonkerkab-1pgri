@@ -17,6 +17,7 @@ import {
   executePlenoAttendancePDF,
   executeMealCouponsPDF,
   executeScannedResultPDF,
+  executeKuorumPDF,
 } from "../lib/export-utils";
 import { EVENT_AGENDA } from "../lib/constants";
 import {
@@ -32,6 +33,7 @@ import { getFlattenedRows } from "../lib/data-utils";
 interface Props {
   submissions: SubmissionData[];
   attendanceLogs: any[];
+  confirmations: any[];
   isRegistrationOpen: boolean;
   showModal: (
     title: string,
@@ -48,6 +50,7 @@ interface Props {
 export function AdminTab({
   submissions,
   attendanceLogs,
+  confirmations,
   isRegistrationOpen,
   showModal,
   setModalProgress,
@@ -1339,6 +1342,26 @@ export function AdminTab({
                       </svg>
                     </div>
                     <span className="tooltip-text">Kupon Makan</span>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShowExportModal(false);
+                      executeKuorumPDF(flattenedRows, attendanceLogs, confirmations);
+                    }}
+                    className="export-option-card group tooltip-container"
+                  >
+                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <span className="tooltip-text">Laporan Kuorum</span>
                   </div>
                   <div
                     onClick={() => {
