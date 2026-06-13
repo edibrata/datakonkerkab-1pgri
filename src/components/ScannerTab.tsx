@@ -2,14 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { getFirestore, doc, setDoc, getDoc, collection } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { CUSTOM_APP_ID } from "../lib/constants";
 
 export const ScannerTab = ({ showModal }: { showModal: Function }) => {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [selectedKomisiGuard, setSelectedKomisiGuard] = useState("");
   const [scannerActive, setScannerActive] = useState(false);
   const [lastScanResult, setLastScanResult] = useState<any>(null);
-  const [toast, setToast] = useState<{message: string, type: "success"|"error"} | null>(null);
+  const [toast, setToast] = useState<{message: string, type: "success"|"error"|"warning"} | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const isActiveRef = useRef(false);
 
@@ -38,7 +39,7 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
     { id: "makan_3", name: "Makan 3" }
   ];
 
-  const playBeep = (type: "success" | "error") => {
+  const playBeep = (type: "success" | "error" | "warning") => {
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const osc = ctx.createOscillator();
@@ -55,6 +56,14 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.1);
+      } else if (type === "warning") {
+        osc.type = "square";
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.setValueAtTime(600, ctx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.2);
       } else {
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(300, ctx.currentTime);
@@ -69,7 +78,7 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
     }
   };
 
-  const showToastAndResume = (msg: string, type: "success"|"error") => {
+  const showToastAndResume = (msg: string, type: "success"|"error"|"warning") => {
     playBeep(type);
     setToast({ message: msg, type });
     setTimeout(() => {
@@ -107,7 +116,7 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
             const participantIndex = parseInt(parts.pop() || "1");
             const docId = parts.join("-") || decodedText;
 
-            const subRef = doc(db, "submissions", docId);
+            const subRef = doc(db, "artifacts", CUSTOM_APP_ID, "public", "data", "pendaftar", docId);
             const subSnap = await getDoc(subRef);
             if (!subSnap.exists()) {
                setLastScanResult({ status: 'error', text: `${decodedText} (Tidak Ditemukan)` });
@@ -146,7 +155,7 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
             
             if (docSnap.exists()) {
               setLastScanResult({ status: 'already_scanned', text: `${namaPeserta} (${decodedText})` });
-              showToastAndResume(`${namaPeserta} sudah tercatat!`, "error");
+              showToastAndResume(`SUDAH TERCATAT - ${namaPeserta}`, "warning");
             } else {
               await setDoc(logRef, {
                 participantId: decodedText,
@@ -155,7 +164,7 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
                 timestamp: new Date().toISOString()
               });
               setLastScanResult({ status: 'success', text: `${namaPeserta} (${decodedText})` });
-              showToastAndResume(`${namaPeserta} Berhasil!`, "success");
+              showToastAndResume(`${namaPeserta} Berhasil Masuk!`, "success");
             }
           } catch (error: any) {
              showToastAndResume(error.message || "Gagal mencatat presensi", "error");
@@ -246,9 +255,11 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
           
           {toast && (
             <div className="absolute inset-0 flex items-center justify-center p-4 z-10">
-               <div className={`w-full max-w-[280px] p-6 rounded-2xl shadow-xl flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200 ${toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+               <div className={`w-full max-w-[280px] p-6 rounded-2xl shadow-xl flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200 ${toast.type === 'success' ? 'bg-emerald-500 text-white' : toast.type === 'warning' ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'}`}>
                  {toast.type === 'success' ? (
                    <CheckCircle2 className="w-16 h-16 mb-3 drop-shadow-md" />
+                 ) : toast.type === 'warning' ? (
+                   <AlertTriangle className="w-16 h-16 mb-3 drop-shadow-md" />
                  ) : (
                    <XCircle className="w-16 h-16 mb-3 drop-shadow-md" />
                  )}
@@ -260,8 +271,8 @@ export const ScannerTab = ({ showModal }: { showModal: Function }) => {
           )}
 
           {lastScanResult && !toast && (
-            <div className={`mt-4 p-4 rounded text-center ${lastScanResult.status === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                <p className="font-bold text-sm uppercase">{lastScanResult.status === 'success' ? 'Berhasil Dicatat' : 'Gagal / Sudah Dicatat'}</p>
+            <div className={`mt-4 p-4 rounded text-center ${lastScanResult.status === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : lastScanResult.status === 'already_scanned' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                <p className="font-bold text-sm uppercase">{lastScanResult.status === 'success' ? 'Berhasil Dicatat' : lastScanResult.status === 'already_scanned' ? 'Sudah Tercatat' : 'Gagal Dicatat'}</p>
                 <p className="text-xs mt-1 font-mono">{lastScanResult.text}</p>
             </div>
           )}
