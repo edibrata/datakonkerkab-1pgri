@@ -861,6 +861,7 @@ export function AdminTab({
                 </span>
               </th>
               <th className="px-4 py-4">Surat Mandat</th>
+              <th className="px-4 py-4 min-w-[150px]">Log Konfirmasi</th>
               <th className="px-4 py-4 min-w-[150px]">Log Presensi</th>
               <th
                 className="px-4 py-4 w-40 sortable tooltip-container"
@@ -1195,6 +1196,48 @@ export function AdminTab({
                     ) : (
                       <span className="text-slate-400">-</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3 min-w-[150px]">
+                    <div className="grid grid-cols-5 gap-1.5 w-max mx-auto">
+                      {EVENT_AGENDA.map((event, index) => {
+                        const confRecord = confirmations.find(
+                          (conf) => conf.participantId === `${r.id}-${r.i}` && conf.eventId === event.id
+                        );
+                        const hasConfirmed = !!confRecord;
+                        return (
+                          <div
+                            key={`conf-${event.id}`}
+                            onClick={async () => {
+                              if (hasConfirmed && confRecord?.id) {
+                                setConfirmDialog({
+                                  message: "Reset Konfirmasi",
+                                  description: `Batalkan konfirmasi ${event.name} untuk ${r.name}?`,
+                                  onConfirm: async () => {
+                                    try {
+                                      await deleteDoc(doc(db, "confirmations", confRecord.id));
+                                    } catch (error) {
+                                      console.error(error);
+                                      showModal("GAGAL", "Gagal membatalkan konfirmasi.", "error");
+                                    }
+                                  }
+                                });
+                              }
+                            }}
+                            className={`relative group flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-black shadow-sm transition-all duration-300 ${hasConfirmed ? 'bg-indigo-50 text-indigo-600 border border-indigo-200 cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 hover:scale-105' : 'bg-slate-50 text-slate-300 border border-slate-100 cursor-default'}`}
+                          >
+                            {index + 1}
+                            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:-translate-y-1 transition-all duration-300 shadow-xl pointer-events-none z-[60]">
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className={hasConfirmed ? "text-indigo-400" : "text-slate-400"}>{event.name}</span>
+                                <span className="text-[10px] font-medium text-slate-300">{hasConfirmed ? '(Klik untuk Batal)' : '(Belum Konfirmasi)'}</span>
+                              </div>
+                              {/* Tail triangle */}
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </td>
                   <td className="px-4 py-3 min-w-[150px]">
                     <div className="grid grid-cols-5 gap-1.5 w-max mx-auto">
