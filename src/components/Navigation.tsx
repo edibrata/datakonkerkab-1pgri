@@ -138,38 +138,6 @@ export function Navigation({ activeTab, onTabChange, adminRole, onLogoClick, isD
             </button>
           )}
 
-          {adminRole && setIsMobileSimMode && (
-            <button
-              onClick={() => setIsMobileSimMode(!isMobileSimMode)}
-              className={`relative px-3 ml-2 transition-all duration-300 flex items-center justify-center group cursor-pointer ${isMobileSimMode ? "text-indigo-500" : "text-slate-400 hover:text-slate-600"}`}
-            >
-              {isMobileSimMode ? (
-                <Monitor className="h-5 w-5 group-hover:-translate-y-1 group-hover:scale-110 transition-transform duration-300" />
-              ) : (
-                <Smartphone className="h-5 w-5 group-hover:-translate-y-1 group-hover:scale-110 transition-transform duration-300" />
-              )}
-              <span className="absolute top-[calc(100%+8px)] right-0 md:left-1/2 md:-translate-x-1/2 bg-slate-800 text-white px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 shadow-xl pointer-events-none z-[9999] origin-top-right md:origin-top before:content-[''] before:absolute before:-top-1 before:right-3 md:before:left-1/2 md:before:-translate-x-1/2 before:border-4 before:border-transparent before:border-b-slate-800">
-                {isMobileSimMode ? "Mode Desktop" : "Simulasi Mobile"}
-              </span>
-            </button>
-          )}
-
-          {setIsDarkMode && (
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`relative px-3 md:ml-1 transition-all duration-300 flex items-center justify-center group cursor-pointer text-slate-400 hover:text-slate-600`}
-            >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5 group-hover:-translate-y-1 group-hover:scale-110 transition-transform duration-300" />
-              ) : (
-                <Moon className="h-5 w-5 group-hover:-translate-y-1 group-hover:scale-110 transition-transform duration-300" />
-              )}
-              <span className="absolute top-[calc(100%+8px)] right-0 md:left-1/2 md:-translate-x-1/2 bg-slate-800 text-white px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-1 transition-all duration-300 shadow-xl pointer-events-none z-[9999] origin-top-right md:origin-top before:content-[''] before:absolute before:-top-1 before:right-3 md:before:left-1/2 md:before:-translate-x-1/2 before:border-4 before:border-transparent before:border-b-slate-800">
-                {isDarkMode ? "Mode Terang" : "Mode Gelap"}
-              </span>
-            </button>
-          )}
-
           {!adminRole && (
             <button
               onClick={() => onTabChange("data")}

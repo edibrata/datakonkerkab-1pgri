@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { Sun, Moon, Smartphone, Monitor } from "lucide-react";
 import { useFirebaseData } from "./hooks/useFirebaseData";
 import { Navigation } from "./components/Navigation";
 import { SubmissionData } from "./types";
@@ -599,6 +600,26 @@ export default function App() {
         </div>
       )}
       
+      {/* Floating Settings */}
+      <div className="fixed bottom-4 md:bottom-8 right-4 md:right-8 flex flex-col gap-2 z-[990]">
+        {adminRole && (
+          <button
+            onClick={() => setIsMobileSimMode(!isMobileSimMode)}
+            title={isMobileSimMode ? "Mode Desktop" : "Simulasi Mobile"}
+            className={`flex items-center justify-center p-3 rounded-full shadow-lg transition-all duration-300 ${isMobileSimMode ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'}`}
+          >
+            {isMobileSimMode ? <Monitor className="w-5 h-5 flex-shrink-0" /> : <Smartphone className="w-5 h-5 flex-shrink-0" />}
+          </button>
+        )}
+        <button
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          title={isDarkMode ? "Mode Terang" : "Mode Gelap"}
+          className={`flex items-center justify-center p-3 rounded-full shadow-lg transition-all duration-300 bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700`}
+        >
+          {isDarkMode ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
+        </button>
+      </div>
+
       </div>
       </div>
     </div>
