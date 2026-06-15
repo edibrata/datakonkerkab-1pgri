@@ -26,6 +26,20 @@ export default function App() {
   const [adminRole, setAdminRole] = useState<"full" | "scanner" | null>(getInitRole());
   const [activeTab, setActiveTab] = useState(adminRole === "full" ? "beranda" : (adminRole === "scanner" ? "scanner" : "info_peserta"));
 
+  // Layout & Theme States
+  const [isMobileSimMode, setIsMobileSimMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
   // Modal States
   const [modalConfig, setModalConfig] = useState<{
     title: string;
@@ -82,15 +96,30 @@ export default function App() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col text-sm relative">
-      <Navigation 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-        adminRole={adminRole} 
-        onLogoClick={() => setShowDeveloperProfile(true)} 
-      />
+    <div className={`min-h-screen text-slate-800 text-sm relative transition-all duration-500 flex justify-center ${isMobileSimMode ? 'bg-slate-300 py-4 md:py-8' : 'bg-slate-50'}`}>
+      <div 
+        className={`flex flex-col w-full bg-slate-50 relative transition-all duration-500
+          ${isMobileSimMode 
+            ? 'max-w-[390px] shadow-[0_0_50px_rgba(0,0,0,0.3)] rounded-[2.5rem] overflow-hidden border-[10px] border-slate-800 min-h-[844px] max-h-[844px]' 
+            : 'min-h-screen'
+          }`}
+      >
+      {isMobileSimMode && (
+        <div className="absolute top-0 inset-x-0 h-4 bg-slate-800 rounded-b-xl w-32 mx-auto z-[9999]"></div>
+      )}
+      <div className={`flex-grow flex flex-col w-full ${isMobileSimMode ? 'overflow-y-auto custom-scrollbar' : ''}`}>
+        <Navigation 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+          adminRole={adminRole} 
+          onLogoClick={() => setShowDeveloperProfile(true)} 
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+          isMobileSimMode={isMobileSimMode}
+          setIsMobileSimMode={setIsMobileSimMode}
+        />
 
-      <main className={`${activeTab === "data" ? "max-w-[98%]" : "max-w-7xl"} mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex-grow w-full`}>
+        <main className={`${activeTab === "data" ? "max-w-[98%]" : "max-w-7xl"} mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex-grow w-full`}>
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
@@ -557,7 +586,7 @@ export default function App() {
           >
             <button
               onClick={() => setPreviewImage(null)}
-              className="absolute top-2 right-2 text-slate-400 hover:bg-slate-100 p-2 rounded-full"
+              className="absolute top-2 right-2 text-slate-400 hover:bg-slate-100 p-2 rounded-full cursor-pointer"
             >
               ✕
             </button>
@@ -569,6 +598,9 @@ export default function App() {
           </div>
         </div>
       )}
+      
+      </div>
+      </div>
     </div>
   );
 }

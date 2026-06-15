@@ -888,14 +888,14 @@ export const executeMealCouponsPDF = async (
           doc.addImage(person.foto, format, leftMargin, photoY, photoW, photoH);
         } catch (e) {
           // Fallback if image fails
-          doc.setDrawColor(200);
-          doc.setFillColor(240);
+          doc.setDrawColor('#c8c8c8');
+          doc.setFillColor('#f0f0f0');
           doc.rect(leftMargin, photoY, photoW, photoH, "F");
           doc.rect(leftMargin, photoY, photoW, photoH, "S");
         }
       } else {
-        doc.setDrawColor(200);
-        doc.setFillColor(240);
+        doc.setDrawColor('#c8c8c8');
+        doc.setFillColor('#f0f0f0');
         doc.rect(leftMargin, photoY, photoW, photoH, "F");
         doc.rect(leftMargin, photoY, photoW, photoH, "S");
       }
