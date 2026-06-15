@@ -90,7 +90,7 @@ export default function App() {
         onLogoClick={() => setShowDeveloperProfile(true)} 
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex-grow w-full">
+      <main className={`${activeTab === "data" ? "max-w-[98%]" : "max-w-7xl"} mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex-grow w-full`}>
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
