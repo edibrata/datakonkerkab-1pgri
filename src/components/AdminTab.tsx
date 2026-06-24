@@ -18,6 +18,7 @@ import {
   executeMealCouponsPDF,
   executeScannedResultPDF,
   executeKuorumPDF,
+  executeBranchLabelsPDF,
 } from "../lib/export-utils";
 import { EVENT_AGENDA } from "../lib/constants";
 import {
@@ -1649,6 +1650,26 @@ export function AdminTab({
                       </svg>
                     </div>
                     <span className="tooltip-text">Kupon Makan</span>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShowExportModal(false);
+                      executeBranchLabelsPDF(flattenedRows, showModal);
+                    }}
+                    className="export-option-card group tooltip-container"
+                  >
+                    <div className="w-10 h-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18l-2 10H5L3 10zm3-6h12a2 2 0 012 2v4H4V6a2 2 0 012-2z" />
+                      </svg>
+                    </div>
+                    <span className="tooltip-text">Label Meja</span>
                   </div>
                   <div
                     onClick={() => {

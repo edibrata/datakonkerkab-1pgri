@@ -185,13 +185,16 @@ export const executeRoomMappingPDF = async (
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text(
-        `Hal. ${pageData.pageNumber} dari ${(doc as any).internal.getNumberOfPages()}`,
+        `Hal. ${pageData.pageNumber} dari {T}`,
         105,
         doc.internal.pageSize.height - 10,
         { align: "center" },
       );
     },
   });
+  if (typeof (doc as any).putTotalPages === "function") {
+    (doc as any).putTotalPages("{T}");
+  }
   doc.save(`Konkerkab-1 Pemetaan Kamar ${getTimestamp()}.pdf`);
 };
 
@@ -330,15 +333,16 @@ export const executeRoomSortedPDF = async (
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text(
-        `Hal. ${pageData.pageNumber} dari ${
-          (doc as any).internal.getNumberOfPages()
-        }`,
+        `Hal. ${pageData.pageNumber} dari {T}`,
         105,
         doc.internal.pageSize.height - 10,
         { align: "center" },
       );
     },
   });
+  if (typeof (doc as any).putTotalPages === "function") {
+    (doc as any).putTotalPages("{T}");
+  }
   doc.save(`Konkerkab-1 Pengelompokan Kamar ${getTimestamp()}.pdf`);
 };
 
@@ -500,13 +504,16 @@ export const executeTshirtReceiptPDF = async (
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text(
-        `Hal. ${d.pageNumber} dari ${(doc as any).internal.getNumberOfPages()}`,
+        `Hal. ${d.pageNumber} dari {T}`,
         105,
         doc.internal.pageSize.height - 10,
         { align: "center" },
       );
     },
   });
+  if (typeof (doc as any).putTotalPages === "function") {
+    (doc as any).putTotalPages("{T}");
+  }
   doc.save(`Konkerkab-1 Tanda Terima Kaos ${getTimestamp()}.pdf`);
 };
 
@@ -549,13 +556,16 @@ export const executeMasterKomisiPDF = async (
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text(
-        `Hal. ${d.pageNumber} dari ${(doc as any).internal.getNumberOfPages()}`,
+        `Hal. ${d.pageNumber} dari {T}`,
         105,
         doc.internal.pageSize.height - 10,
         { align: "center" },
       );
     },
   });
+  if (typeof (doc as any).putTotalPages === "function") {
+    (doc as any).putTotalPages("{T}");
+  }
   doc.save(`Konkerkab-1 Master Komisi ${getTimestamp()}.pdf`);
 };
 
@@ -1309,4 +1319,77 @@ export const executeKuorumPDF = async (
   });
 
   doc.save(`Konkerkab-1 Laporan Kuorum ${eventName} ${getTimestamp()}.pdf`);
+};
+
+export const executeBranchLabelsPDF = async (
+  flattenedRows: FlatAdminRow[],
+  showModal: Function
+) => {
+  try {
+    const { jsPDF } = await import("jspdf");
+
+    // Extract unique branches
+    const branchSet = new Set<string>();
+    flattenedRows.forEach((r) => {
+      if (r.branch && r.branch.trim()) {
+        const val = r.branch.trim().toUpperCase();
+        // remove "CABANG " prefix
+        const cleanName = val.replace(/^CABANG\s+/i, '').trim();
+        branchSet.add(cleanName);
+      }
+    });
+
+    const uniqueBranches = Array.from(branchSet).sort((a, b) => a.localeCompare(b));
+
+    if (uniqueBranches.length === 0) {
+      return showModal("ERROR", "Tidak ada data cabang valid.", "error");
+    }
+
+    const doc = new jsPDF("l", "mm", "a4");
+
+    const drawBranchLabel = (doc: any, name: string, yOffset: number) => {
+      const blockHeight = 105;
+      const blockCenterY = yOffset + (blockHeight / 2);
+      const blockCenterX = 148.5;
+
+      doc.setFont("helvetica", "bold");
+      
+      let fontSize = 120;
+      doc.setFontSize(fontSize);
+      let textWidth = (doc.getStringUnitWidth(name) * fontSize) / doc.internal.scaleFactor;
+      
+      while (textWidth > 260 && fontSize > 20) {
+        fontSize -= 5;
+        doc.setFontSize(fontSize);
+        textWidth = (doc.getStringUnitWidth(name) * fontSize) / doc.internal.scaleFactor;
+      }
+
+      doc.setTextColor(30, 41, 59);
+      doc.text(name, blockCenterX, blockCenterY, { align: "center", baseline: "middle" });
+    };
+
+    for (let i = 0; i < uniqueBranches.length; i += 2) {
+      if (i > 0) doc.addPage();
+
+      const branch1 = uniqueBranches[i];
+      const branch2 = uniqueBranches[i + 1];
+
+      doc.setDrawColor(200);
+      doc.setLineDashPattern([2, 5], 0);
+      doc.line(0, 105, 297, 105);
+      doc.setLineDashPattern([], 0);
+
+      drawBranchLabel(doc, branch1, 0);
+
+      if (branch2) {
+        drawBranchLabel(doc, branch2, 105);
+      }
+    }
+
+    doc.save(`Label_Meja_Cabang.pdf`);
+    showModal("SUCCESS", "Berhasil mengekspor Label Meja.", "success");
+  } catch (error) {
+    console.error("Error generating Branch Labels:", error);
+    showModal("ERROR", "Gagal mengekspor Label Meja.", "error");
+  }
 };
