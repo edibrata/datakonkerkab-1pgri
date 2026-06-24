@@ -1393,3 +1393,71 @@ export const executeBranchLabelsPDF = async (
     showModal("ERROR", "Gagal mengekspor Label Meja.", "error");
   }
 };
+
+export const executeVIPSeatLabelsPDF = async (showModal: Function) => {
+  try {
+    const { jsPDF } = await import("jspdf");
+
+    const labels = [
+      "Raden Dewi Setiani\n(Bupati Pandeglang)",
+      "Pengurus Provinsi",
+      "Pengurus Provinsi",
+      "Pengurus Provinsi",
+      "Pengurus Provinsi",
+      "H. Undang Suhendar\n(Dewan Pakar)",
+      "H. Moh Amri\n(DKGI)",
+      "Camat Carita",
+      "Kapolsek Carita",
+      "Danposmil Carita",
+      "Korwil Disdikpora Carita"
+    ];
+
+    // Landscape A4: 297 x 210
+    const doc = new jsPDF("l", "mm", "a4");
+
+    const pageWidth = 297;
+    const pageHeight = 210;
+    const cols = 3;
+    const rows = 4;
+    
+    const cellWidth = pageWidth / cols;
+    const cellHeight = pageHeight / rows;
+    
+    doc.setDrawColor(200);
+    doc.setLineDashPattern([2, 5], 0);
+
+    for (let r = 0; r <= rows; r++) {
+      if (r > 0 && r < rows) doc.line(0, r * cellHeight, pageWidth, r * cellHeight);
+    }
+    for (let c = 0; c <= cols; c++) {
+      if (c > 0 && c < cols) doc.line(c * cellWidth, 0, c * cellWidth, pageHeight);
+    }
+    
+    doc.setLineDashPattern([], 0);
+
+    for (let i = 0; i < labels.length; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      
+      const text = labels[i];
+      const centerX = col * cellWidth + (cellWidth / 2);
+      const centerY = row * cellHeight + (cellHeight / 2);
+      
+      doc.setFont("helvetica", "bold");
+      
+      let fontSize = 20;
+      doc.setFontSize(fontSize);
+      
+      const lines = text.split('\n');
+      
+      doc.setTextColor(30, 41, 59);
+      doc.text(lines, centerX, centerY, { align: "center", baseline: "middle" });
+    }
+
+    doc.save(`Label_Kursi_VIP.pdf`);
+    showModal("SUCCESS", "Berhasil mengekspor Label Kursi VIP.", "success");
+  } catch (error) {
+    console.error("Error generating VIP Seat Labels:", error);
+    showModal("ERROR", "Gagal mengekspor Label Kursi VIP.", "error");
+  }
+};

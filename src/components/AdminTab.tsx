@@ -19,6 +19,7 @@ import {
   executeScannedResultPDF,
   executeKuorumPDF,
   executeBranchLabelsPDF,
+  executeVIPSeatLabelsPDF,
 } from "../lib/export-utils";
 import { EVENT_AGENDA } from "../lib/constants";
 import {
@@ -1670,6 +1671,26 @@ export function AdminTab({
                       </svg>
                     </div>
                     <span className="tooltip-text">Label Meja</span>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShowExportModal(false);
+                      executeVIPSeatLabelsPDF(showModal);
+                    }}
+                    className="export-option-card group tooltip-container"
+                  >
+                    <div className="w-10 h-10 bg-cyan-50 text-cyan-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform mx-auto">
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 14v1a2 2 0 01-2 2H7a2 2 0 01-2-2v-1m14-4V7a2 2 0 00-2-2H7a2 2 0 00-2 2v3m14 4H5m14 0h-3m-8 0H5m4 0h6" />
+                      </svg>
+                    </div>
+                    <span className="tooltip-text">Label Kursi VIP</span>
                   </div>
                   <div
                     onClick={() => {

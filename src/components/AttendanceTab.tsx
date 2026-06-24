@@ -22,7 +22,42 @@ export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] 
   }, [flatRows]);
 
   const stats = useMemo(() => {
-    return EVENT_AGENDA.map((event) => {
+    const uniqueKomisi = Array.from(new Set(flatRows.map((r) => r.kom).filter(Boolean))).sort();
+
+    return EVENT_AGENDA.flatMap((event) => {
+      if (event.id === "komisi") {
+        return uniqueKomisi.map((komisiName) => {
+          const komisiId = `komisi_${komisiName}`;
+          // total peserta in this komisi
+          const totalInKomisi = flatRows.filter(r => r.kategori === "PESERTA CABANG" && r.kom === komisiName).length;
+
+          const logsForEvent = attendanceLogs.filter((l) => l.eventId === event.id);
+          const pesertaCabangLogs = logsForEvent.filter(l => {
+             const person = flatRows.find((r) => `${r.id}-${r.i}` === l.participantId);
+             return person?.kategori === "PESERTA CABANG" && person?.kom === komisiName;
+          });
+          const count = pesertaCabangLogs.length;
+
+          const eventConfirmations = confirmations.filter(c => c.eventId === event.id);
+          const pesertaCabangConfirms = eventConfirmations.filter(c => {
+            const person = flatRows.find((r) => `${r.id}-${r.i}` === c.participantId);
+            return person?.kategori === "PESERTA CABANG" && person?.kom === komisiName;
+          });
+          const confirmCount = pesertaCabangConfirms.length;
+
+          return {
+            id: komisiId,
+            name: `Sidang ${komisiName}`,
+            count,
+            confirmCount,
+            percentage: totalInKomisi ? Math.round((count / totalInKomisi) * 100) : 0,
+            confirmPercentage: totalInKomisi ? Math.round((confirmCount / totalInKomisi) * 100) : 0,
+            totalSummary: count + confirmCount,
+            totalPercentage: totalInKomisi ? Math.round(((count + confirmCount) / totalInKomisi) * 100) : 0,
+          };
+        });
+      }
+
       const logsForEvent = attendanceLogs.filter((l) => l.eventId === event.id);
       
       const pesertaCabangLogs = logsForEvent.filter(l => {
@@ -39,7 +74,7 @@ export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] 
       });
       const confirmCount = pesertaCabangConfirms.length;
 
-      return {
+      return [{
         ...event,
         count,
         confirmCount,
@@ -47,7 +82,7 @@ export const AttendanceTab = ({ submissions, attendanceLogs, confirmations = [] 
         confirmPercentage: totalPesertaCabang ? Math.round((confirmCount / totalPesertaCabang) * 100) : 0,
         totalSummary: count + confirmCount,
         totalPercentage: totalPesertaCabang ? Math.round(((count + confirmCount) / totalPesertaCabang) * 100) : 0,
-      };
+      }];
     });
   }, [attendanceLogs, confirmations, flatRows, totalPesertaCabang]);
 
